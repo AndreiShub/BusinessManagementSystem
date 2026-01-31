@@ -1,0 +1,69 @@
+# ------------------------
+# Python
+# ------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+pip-wheel-metadata/
+
+# ------------------------
+# Testing / Coverage
+# ------------------------
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+.hypothesis/
+
+# ------------------------
+# FastAPI / Django / general
+# ------------------------
+*.sqlite3
+*.log
+*.pot
+*.pyc
+*.pyo
+
+# ------------------------
+# PostgreSQL backups
+# ------------------------
+*.sql
+*.dump
+
+# ------------------------
+# IDE / Editor
+# ------------------------
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ------------------------
+# OS-specific
+# ------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# Misc
+# ------------------------
+.env
