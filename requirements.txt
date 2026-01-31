@@ -7,3 +7,7 @@ alembic
 
 pydantic-settings
 python-dotenv
+
+fastapi-users[sqlalchemy]
+passlib[bcrypt]
+python-jose
