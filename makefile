@@ -112,5 +112,5 @@ docker-down:
 
 .PHONY: clean
 clean:
-	rm -rf .pytest_cache .coverage htmlcov
+	rm -rf .pytest_cache .coverage htmlcov .ruff_cache .mypy_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +

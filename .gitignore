@@ -67,3 +67,6 @@ Thumbs.db
 # Misc
 # ------------------------
 .env
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
