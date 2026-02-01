@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.core.auth import fastapi_users, auth_backend
 from app.schemas.users import UserRead, UserCreate, UserUpdate
+from app.api.v1.teams import router as teams_router
 
 router = APIRouter()
 
@@ -21,3 +22,5 @@ router.include_router(
     prefix="/users",
     tags=["users"],
 )
+
+router.include_router(teams_router)
