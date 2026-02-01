@@ -20,9 +20,7 @@ async def join_team(
     db: AsyncSession = Depends(get_db),
 ):
     # 1. Ищем команду по коду
-    result = await db.execute(
-        select(Team).where(Team.code == data.code)
-    )
+    result = await db.execute(select(Team).where(Team.code == data.code))
     team = result.scalar_one_or_none()
 
     if not team:
@@ -55,13 +53,12 @@ async def join_team(
 
     return {"message": "Joined the team successfully"}
 
+
 @router.get("/{team_id}/members", response_model=list[TeamMemberRead])
 async def list_team_members(
     team_id,
     member=Depends(get_team_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(TeamMember).where(TeamMember.team_id == team_id)
-    )
+    result = await db.execute(select(TeamMember).where(TeamMember.team_id == team_id))
     return result.scalars().all()

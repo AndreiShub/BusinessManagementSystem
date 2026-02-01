@@ -14,8 +14,10 @@ class TeamRead(BaseModel):
     class Config:
         from_attributes = True
 
+
 class JoinTeamRequest(BaseModel):
     code: str
+
 
 class TeamMemberRead(BaseModel):
     user_id: uuid.UUID
