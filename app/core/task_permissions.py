@@ -24,6 +24,7 @@ async def ensure_can_manage_tasks(
             detail="Not allowed to manage tasks",
         )
 
+
 async def ensure_can_update_task(
     db: AsyncSession,
     user_id,
