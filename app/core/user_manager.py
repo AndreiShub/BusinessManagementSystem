@@ -1,6 +1,5 @@
 import uuid
 from fastapi_users import BaseUserManager, UUIDIDMixin
-from fastapi import Depends
 
 from app.db.models.user import User
 from app.core.config import settings
