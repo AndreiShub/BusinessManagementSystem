@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Задачи команды: <span id="team-name"></span></h2>
+
+<form id="create-task-form">
+  <input id="task-title" placeholder="Название задачи" required>
+  <input id="task-assignee" placeholder="ID исполнителя (опционально)">
+  <input id="task-deadline" type="date" required>
+  <select id="task-status">
+    <option value="open">Открыто</option>
+    <option value="in_progress">В работе</option>
+    <option value="done">Выполнено</option>
+  </select>
+  <button type="submit">Создать задачу</button>
+</form>
+
+<ul id="task-list"></ul>
+
+<script src="/static/js/tasks.js"></script>
+{% endblock %}

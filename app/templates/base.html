@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Business Management System</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+<header>
+  <nav id="navbar">
+    <a href="/">Главная</a>
+    <a href="/teams" id="teams-link" style="display:none;">Мои команды</a>
+    <a href="/login" id="login-link">Вход</a>
+    <a href="/register" id="register-link">Регистрация</a>
+    <button id="logout-btn" style="display:none;" onclick="logout()">Выход</button>
+  </nav>
+</header>
+
+<hr>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<script src="/static/js/auth.js"></script>
+<script>
+  updateNavbar();
+</script>
+
+</body>
+</html>

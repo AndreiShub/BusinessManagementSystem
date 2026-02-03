@@ -9,6 +9,7 @@ from app.db.models.team_member import TeamMember, TeamRole
 from app.schemas.team import TeamCreate, TeamRead
 from app.core.auth import current_active_user
 from app.core.dependencies import get_team_admin
+from sqlalchemy.future import select
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -34,6 +35,17 @@ async def create_team(
     await db.commit()
 
     return team
+
+
+@router.get("/", response_model=list[TeamRead])
+async def list_teams(
+    db: AsyncSession = Depends(get_db), user=Depends(current_active_user)
+):
+    result = await db.execute(
+        select(Team).join(TeamMember).where(TeamMember.user_id == user.id)
+    )
+    teams = result.scalars().all()
+    return teams
 
 
 @router.get("/{team_id}", response_model=TeamRead)

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Регистрация</h2>
+
+<form id="register-form">
+  <input id="email" type="email" placeholder="Email" required>
+  <input id="password" type="password" placeholder="Пароль" required>
+  <input id="password_confirm" type="password" placeholder="Повторите пароль" required>
+  <button type="submit">Зарегистрироваться</button>
+</form>
+
+<p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+
+<script src="/static/js/register.js"></script>
+{% endblock %}

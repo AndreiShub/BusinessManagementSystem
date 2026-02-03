@@ -80,6 +80,7 @@ async def update_task(
     await db.refresh(task)
     return task
 
+
 @router.delete("/{task_id}", status_code=204)
 async def delete_task(
     team_id: uuid.UUID,

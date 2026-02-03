@@ -5,7 +5,7 @@ from app.api.v1.teams import router as teams_router
 from app.api.v1.team_members import router as team_members_router
 from app.api.v1.tasks import router as tasks_router
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 router.include_router(
     fastapi_users.get_auth_router(auth_backend),

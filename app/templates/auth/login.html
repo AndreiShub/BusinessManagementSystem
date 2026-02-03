@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Вход</h2>
+
+<form id="login-form" onsubmit="login(event)">
+  <input id="email" type="email" placeholder="Email" required>
+  <input id="password" type="password" placeholder="Пароль" required>
+  <button type="submit">Войти</button>
+</form>
+
+<p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+
+<script src="/static/js/auth.js"></script>
+{% endblock %}
+

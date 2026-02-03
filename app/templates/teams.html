@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Мои команды</h2>
+
+<form id="create-team-form">
+  <input id="team-name" placeholder="Название команды" required>
+  <button type="submit">Создать команду</button>
+</form>
+
+<ul id="team-list"></ul>
+<script src="/static/js/teams.js"></script>
+{% endblock %}
