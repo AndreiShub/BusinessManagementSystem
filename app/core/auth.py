@@ -17,7 +17,7 @@ def get_jwt_strategy() -> JWTStrategy:
     )
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/login")
+bearer_transport = BearerTransport(tokenUrl="/api/v1/auth/login")
 
 auth_backend = AuthenticationBackend(
     name="jwt",
