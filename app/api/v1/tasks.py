@@ -11,10 +11,35 @@ from app.core.auth import current_active_user
 from app.core.task_permissions import ensure_can_manage_tasks
 from app.core.task_permissions import ensure_can_update_task
 
-router = APIRouter(prefix="/teams/{team_id}/tasks", tags=["tasks"])
+router = APIRouter(prefix="/teams", tags=["tasks"])
 
 
-@router.post("/", response_model=TaskRead)
+@router.get("/{team_id}/tasks", response_model=list[TaskRead])
+async def list_tasks(
+    team_id: uuid.UUID,
+    user=Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # 1️⃣ Проверяем, что пользователь состоит в команде
+    result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user.id,
+        )
+    )
+    membership = result.scalar_one_or_none()
+
+    if not membership:
+        raise HTTPException(status_code=403, detail="Not a team member")
+
+    # 2️⃣ Получаем задачи команды
+    result = await db.execute(select(Task).where(Task.team_id == team_id))
+
+    tasks = result.scalars().all()
+    return tasks
+
+
+@router.post("/{team_id}/tasks", response_model=TaskRead)
 async def create_task(
     team_id: uuid.UUID,
     data: TaskCreate,
@@ -46,7 +71,7 @@ async def create_task(
     return task
 
 
-@router.patch("/{task_id}", response_model=TaskRead)
+@router.patch("/{team_id}/tasks/{task_id}", response_model=TaskRead)
 async def update_task(
     team_id: uuid.UUID,
     task_id: uuid.UUID,
@@ -81,7 +106,7 @@ async def update_task(
     return task
 
 
-@router.delete("/{task_id}", status_code=204)
+@router.delete("/{team_id}/tasks/{task_id}", status_code=204)
 async def delete_task(
     team_id: uuid.UUID,
     task_id: uuid.UUID,
