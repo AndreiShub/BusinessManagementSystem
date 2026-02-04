@@ -14,21 +14,24 @@ async function loadTeams() {
 
   teams.forEach(team => {
     const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>${team.name}</strong>
-      <button id="select-${team.id}">Открыть задачи</button>
-    `;
-    list.appendChild(li);
 
-    // Добавляем обработчик кнопки "Открыть задачи"
-    document.getElementById(`select-${team.id}`).addEventListener("click", () => {
-      // сохраняем текущую команду в localStorage
-      localStorage.setItem("currentTeamId", team.id);
-      localStorage.setItem("currentTeamName", team.name);
-      window.location.href = "/tasks"; // переходим на страницу задач
+    const title = document.createElement("strong");
+    title.textContent = team.name;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Открыть задачи";
+    btn.addEventListener("click", () => {
+    const url = `/teams/${team.id}/tasks`;
+    window.location.assign(url);
     });
+    li.appendChild(title);
+    li.appendChild(document.createTextNode(" "));
+    li.appendChild(btn);
+
+    list.appendChild(li);
   });
 }
+
 
 
 document.getElementById("create-team-form").addEventListener("submit", async (e) => {

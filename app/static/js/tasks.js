@@ -1,10 +1,14 @@
-let currentTeamId = null; // нужно прокинуть при переходе на страницу или выбрать из списка
+function getTeamIdFromUrl() {
+  const parts = window.location.pathname.split("/");
+  return parts[2]; // /teams/{team_id}/tasks → parts[2] = team_id
+}
 
 async function loadTasks() {
   const token = localStorage.getItem("token");
-  if (!token || !currentTeamId) return;
+  const teamId = getTeamIdFromUrl();
+  if (!token || !teamId) return;
 
-  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks/`, {
+  const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
     headers: { "Authorization": `Bearer ${token}` }
   });
 
@@ -26,6 +30,8 @@ async function loadTasks() {
   });
 }
 
+document.addEventListener("DOMContentLoaded", loadTasks);
+
 // Создание задачи
 document.getElementById("create-task-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -40,7 +46,7 @@ document.getElementById("create-task-form").addEventListener("submit", async (e)
     status: document.getElementById("task-status").value
   };
 
-  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks/`, {
+  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

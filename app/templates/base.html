@@ -11,9 +11,11 @@
   <nav id="navbar">
     <a href="/">Главная</a>
     <a href="/teams" id="teams-link" style="display:none;">Мои команды</a>
+    <a href="/tasks" id="tasks-link" style="display:none;">Мои задачи</a>
+    <a href="/join" id="join-team-link">Присоединиться к команде</a>
     <a href="/login" id="login-link">Вход</a>
     <a href="/register" id="register-link">Регистрация</a>
-    <button id="logout-btn" style="display:none;" onclick="logout()">Выход</button>
+    <a href="javascript:void(0);" id="logout-link" style="display:none;" onclick="logout()">Выход</a>
   </nav>
 </header>
 
@@ -24,9 +26,6 @@
 </main>
 
 <script src="/static/js/auth.js"></script>
-<script>
-  updateNavbar();
-</script>
 
 </body>
 </html>

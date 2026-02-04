@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
@@ -37,9 +38,14 @@ def teams_page(request: Request):
     )
 
 
-@router.get("/tasks")
-def tasks_page(request: Request, team_id: str):
+@router.get("/teams/{team_id}/tasks")
+def tasks_page(request: Request, team_id: uuid.UUID):
     return templates.TemplateResponse(
         "tasks.html",
         {"request": request, "team_id": team_id},
     )
+
+
+@router.get("/join")
+async def join_page(request: Request):
+    return templates.TemplateResponse("join.html", {"request": request})

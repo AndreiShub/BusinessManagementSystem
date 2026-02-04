@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<main>
+  <h2>Присоединиться к команде</h2>
+  <form id="join-form">
+    <label for="code">Код команды:</label>
+    <input type="text" id="code" name="code" required>
+    <button type="submit">Присоединиться</button>
+  </form>
+
+  <p id="message"></p>
+</main>
+<script src="/static/js/join.js"></script>
+{% endblock %}

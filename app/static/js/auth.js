@@ -5,18 +5,18 @@ function isAuthenticated() {
 function updateNavbar() {
   const loginLink = document.getElementById("login-link");
   const registerLink = document.getElementById("register-link");
-  const logoutBtn = document.getElementById("logout-btn");
+  const logoutLink = document.getElementById("logout-link");
   const teamsLink = document.getElementById("teams-link");
 
   if (isAuthenticated()) {
     loginLink.style.display = "none";
     registerLink.style.display = "none";
-    logoutBtn.style.display = "inline";
+    logoutLink.style.display = "inline";
     teamsLink.style.display = "inline";
   } else {
     loginLink.style.display = "inline";
     registerLink.style.display = "inline";
-    logoutBtn.style.display = "none";
+    logoutLink.style.display = "none";
     teamsLink.style.display = "none";
   }
 }
