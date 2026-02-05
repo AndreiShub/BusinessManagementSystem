@@ -22,9 +22,10 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/"
             f"{self.POSTGRES_DB}"
         )
-    
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+
 
 settings = Settings()
