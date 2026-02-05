@@ -5,7 +5,7 @@ from fastapi_users.authentication import JWTStrategy, AuthenticationBackend
 from app.db.models.user import User
 from app.core.config import settings
 from app.core.user_manager import UserManager
-from app.db.user_db import get_user_db
+from app.db.user_db import get_user_db, get_user_db_direct
 from fastapi import Depends
 from fastapi_users.authentication import BearerTransport
 
@@ -28,6 +28,11 @@ auth_backend = AuthenticationBackend(
 
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
+
+
+async def get_user_manager_direct():
+    async for user_db in get_user_db_direct():
+        yield UserManager(user_db)
 
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](
