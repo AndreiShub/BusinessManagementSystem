@@ -12,7 +12,7 @@ from fastapi_users.authentication import BearerTransport
 
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(
-        secret=settings.secret_key,
+        secret=settings.SECRET_KEY,
         lifetime_seconds=3600,
     )
 

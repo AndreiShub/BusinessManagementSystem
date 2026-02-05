@@ -6,8 +6,8 @@ from app.core.config import settings
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
-    reset_password_token_secret = settings.secret_key
-    verification_token_secret = settings.secret_key
+    reset_password_token_secret = settings.SECRET_KEY
+    verification_token_secret = settings.SECRET_KEY
 
     async def on_after_register(self, user: User, request=None):
         print(f"User {user.email} has registered.")
