@@ -31,6 +31,7 @@ help:
 	@echo "  make docker-up      Run docker-compose"
 	@echo "  make docker-down    Stop docker-compose"
 	@echo "  make clean          Clean caches"
+	@echo "  make createsu       Create superuser"
 	@echo ""
 
 # ========================
@@ -114,3 +115,11 @@ docker-down:
 clean:
 	rm -rf .pytest_cache .coverage htmlcov .ruff_cache .mypy_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+# ========================
+# MISC
+# ========================
+
+.PHONY: createsu
+createsu:
+	$(PYTHON) -m app.scripts.create_superuser
