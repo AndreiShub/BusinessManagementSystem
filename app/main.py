@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.web.router import router as web_router
 from app.admin import setup_admin
+from starlette.middleware.sessions import SessionMiddleware
+from app.core.config import settings
 
 app = FastAPI(
     title="Business Management System",
@@ -17,7 +19,7 @@ app.include_router(api_router)
 app.include_router(web_router)
 
 setup_admin(app)
-
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 @app.get("/health", tags=["health"])
 async def health_check():

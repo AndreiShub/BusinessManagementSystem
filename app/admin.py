@@ -25,18 +25,29 @@ class FastAPIUsersAdminAuth(AuthenticationBackend):
         except UserNotExists:
             return False
 
-        if user.is_superuser and await user_manager.verify_password(
-            password, user.hashed_password
-        ):
-            return True
+        valid, new_hash = user_manager.password_helper.verify_and_update(
+            password,
+            user.hashed_password,
+        )
 
-        return False
+        if not valid or not user.is_superuser:
+            return False
+
+        request.session["user_id"] = str(user.id)
+        request.session["is_superuser"] = True
+
+        if new_hash:
+            user.hashed_password = new_hash
+            await user_manager.user_db.update(user)
+
+        return True
 
     async def logout(self, request: Request) -> None:
         pass
 
     async def authenticate(self, request: Request) -> bool:
-        return False
+        user_id = request.session.get("user_id")
+        return bool(user_id)
 
 
 def setup_admin(app: FastAPI):
