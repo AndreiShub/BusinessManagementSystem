@@ -8,3 +8,8 @@ from app.db.session import get_db
 
 async def get_user_db(session: AsyncSession = Depends(get_db)):
     yield SQLAlchemyUserDatabase(session, User)
+
+
+async def get_user_db_direct():
+    async for db in get_db():
+        yield SQLAlchemyUserDatabase(db, User)
