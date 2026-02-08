@@ -4,9 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.session import get_db
-from app.db.models.task import Task
+from app.db.models.task import Task, TaskRating, TaskComment
 from app.db.models.team_member import TeamMember
-from app.schemas.task import TaskCreate, TaskRead, TaskUpdate
+from app.schemas.task import (
+    TaskCreate,
+    TaskRatingOut,
+    TaskRead,
+    TaskUpdate,
+    TaskRatingCreate,
+    TaskCommentCreate,
+    TaskCommentOut,
+)
 from app.core.auth import current_active_user
 from app.core.task_permissions import ensure_can_manage_tasks
 from app.core.task_permissions import ensure_can_update_task
@@ -132,3 +140,75 @@ async def delete_task(
 
     await db.delete(task)
     await db.commit()
+
+
+@router.get("/tasks/{task_id}/rating")
+def get_my_rating(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(current_active_user),
+):
+    rating = db.query(TaskRating).filter_by(task_id=task_id, user_id=user.id).first()
+
+    if not rating:
+        return {"score": None}
+
+    return {"score": rating.score}
+
+
+@router.get("/tasks/{task_id}/ratings", response_model=list[TaskRatingOut])
+def get_task_ratings(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return db.query(TaskRating).filter_by(task_id=task_id).all()
+
+
+@router.post("/{team_id}/tasks/{task_id}/rating")
+def rate_task(
+    task_id: int,
+    data: TaskRatingCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(current_active_user),
+):
+    rating = db.query(TaskRating).filter_by(task_id=task_id, user_id=user.id).first()
+
+    if rating:
+        rating.score = data.score
+    else:
+        rating = TaskRating(task_id=task_id, user_id=user.id, score=data.score)
+        db.add(rating)
+
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.get("/{team_id}/tasks/{task_id}/comments", response_model=list[TaskCommentOut])
+def get_comments(
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return (
+        db.query(TaskComment)
+        .filter_by(task_id=task_id)
+        .order_by(TaskComment.created_at)
+        .all()
+    )
+
+
+@router.post("/{team_id}/tasks/{task_id}/comments", response_model=TaskCommentOut)
+def add_comment(
+    task_id: int,
+    data: TaskCommentCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(current_active_user),
+):
+    comment = TaskComment(
+        task_id=task_id,
+        user_id=user.id,
+        text=data.text,
+    )
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    return comment
