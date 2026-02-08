@@ -142,7 +142,7 @@ async def delete_task(
     await db.commit()
 
 
-@router.get("/tasks/{task_id}/rating")
+@router.get("/{team_id}/tasks/{task_id}/rating")
 def get_my_rating(
     task_id: int,
     db: AsyncSession = Depends(get_db),
@@ -156,7 +156,7 @@ def get_my_rating(
     return {"score": rating.score}
 
 
-@router.get("/tasks/{task_id}/ratings", response_model=list[TaskRatingOut])
+@router.get("/{team_id}/tasks/{task_id}/ratings", response_model=list[TaskRatingOut])
 def get_task_ratings(
     task_id: int,
     db: AsyncSession = Depends(get_db),
