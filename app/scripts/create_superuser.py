@@ -2,10 +2,12 @@ import asyncio
 from app.core.auth import get_user_manager_direct
 from fastapi_users.exceptions import UserAlreadyExists
 from app.schemas.users import UserCreate
+from getpass import getpass
+
 
 async def main():
     email = input("Email: ").strip()
-    password = input("Password: ").strip()
+    password = getpass("Password: ")
 
     async for user_manager in get_user_manager_direct():
         try:
