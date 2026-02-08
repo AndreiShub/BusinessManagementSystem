@@ -21,6 +21,7 @@ app.include_router(web_router)
 setup_admin(app)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
+
 @app.get("/health", tags=["health"])
 async def health_check():
     return {"status": "ok"}
