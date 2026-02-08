@@ -68,7 +68,7 @@ async def create_task(
             raise HTTPException(400, "Assignee is not in the team")
 
     task = Task(
-        **data.dict(exclude_unset=True),
+        **data.model_dump(exclude_unset=True),
         team_id=team_id,
         creator_id=user.id,
     )
@@ -100,7 +100,7 @@ async def update_task(
 
     permission = await ensure_can_update_task(db, user.id, task)
 
-    update_data = data.dict(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
 
     # исполнитель может менять только статус
     if permission == "status_only":
