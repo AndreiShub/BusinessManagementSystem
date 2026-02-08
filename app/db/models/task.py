@@ -2,7 +2,16 @@ import uuid
 import enum
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, ForeignKey, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Enum,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -53,3 +62,31 @@ class Task(Base):
     team = relationship("Team")
     creator = relationship("User", foreign_keys=[creator_id])
     assignee = relationship("User", foreign_keys=[assignee_id])
+    comments = relationship("TaskComment", backref="task", cascade="all, delete")
+    ratings = relationship("TaskRating", backref="task", cascade="all, delete")
+
+
+class TaskRating(Base):
+    __tablename__ = "task_ratings"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(ForeignKey("tasks.id"), nullable=False)
+    user_id = Column(ForeignKey("users.id"), nullable=False)
+
+    score = Column(Integer, nullable=False)  # 1–5
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("task_id", "user_id", name="uq_task_user_rating"),
+    )
+
+
+class TaskComment(Base):
+    __tablename__ = "task_comments"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(ForeignKey("tasks.id"), nullable=False)
+    user_id = Column(ForeignKey("users.id"), nullable=False)
+
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
