@@ -1,6 +1,7 @@
+from typing import Annotated
 import uuid
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.db.models.task import TaskStatus
 
 
@@ -26,6 +27,32 @@ class TaskRead(BaseModel):
     deadline: datetime | None
     status: TaskStatus
     assignee_id: uuid.UUID | None
+
+    class Config:
+        from_attributes = True
+
+
+class TaskRatingCreate(BaseModel):
+    score: Annotated[int, Field(ge=1, le=5)]
+
+
+class TaskRatingOut(BaseModel):
+    score: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class TaskCommentCreate(BaseModel):
+    text: Annotated[str, Field(min_length=1, max_length=2000)]
+
+
+class TaskCommentOut(BaseModel):
+    id: int
+    text: str
+    user_id: int
+    created_at: datetime
 
     class Config:
         from_attributes = True
