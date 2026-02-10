@@ -19,15 +19,26 @@ async function loadTasks() {
   list.innerHTML = "";
 
   tasks.forEach(task => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>${task.title}</strong> — ${task.status} —
-      Исполнитель: ${task.assignee_id || 'нет'}
-      <button onclick="editTask('${task.id}')">Редактировать</button>
-      <button onclick="deleteTask('${task.id}')">Удалить</button>
-    `;
-    list.appendChild(li);
-  });
+  const li = document.createElement("li");
+  li.style.padding = "8px";
+  li.style.marginBottom = "6px";
+  li.style.cursor = "pointer"; // курсор как ссылка
+
+  // при клике на задачу — переходим на страницу задачи
+  li.onclick = () => {
+  const teamId = localStorage.getItem("currentTeamId");
+  window.location.href = `/teams/${teamId}/tasks/${task.id}/page`;
+};
+
+  li.innerHTML = `
+    <strong>${task.title}</strong> — ${task.status} —
+    Исполнитель: ${task.assignee_id || 'нет'}
+    <button onclick="event.stopPropagation(); editTask('${task.id}')">Редактировать</button>
+    <button onclick="event.stopPropagation(); deleteTask('${task.id}')">Удалить</button>
+  `;
+
+  list.appendChild(li);
+});
 }
 
 document.addEventListener("DOMContentLoaded", loadTasks);

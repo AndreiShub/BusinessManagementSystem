@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<button onclick="goBack()">← Назад к командам</button>
+
+<h2 id="task-title"></h2>
+<p>Статус: <span id="task-status"></span></p>
+
+<hr>
+
+<section id="task-rating">
+  <h3>Оценка</h3>
+  <div id="stars"></div>
+  <small id="rating-info"></small>
+</section>
+
+<hr>
+
+<section id="task-comments">
+  <h3>Комментарии</h3>
+  <div id="comments-list"></div>
+
+  <textarea id="comment-input" rows="3" placeholder="Комментарий..."></textarea>
+  <br>
+  <button id="send-comment">Отправить</button>
+</section>
+
+<script>
+  window.TASK_ID = "{{ task_id }}";
+  window.CURRENT_TEAM_ID = "{{ team_id }}";
+</script>
+<script src="/static/js/task_detail.js"></script>
+
+{% endblock %}
