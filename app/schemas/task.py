@@ -38,7 +38,7 @@ class TaskRatingCreate(BaseModel):
 
 class TaskRatingOut(BaseModel):
     score: int
-    user_id: int
+    user_id: uuid.UUID
 
     class Config:
         from_attributes = True
@@ -51,7 +51,7 @@ class TaskCommentCreate(BaseModel):
 class TaskCommentOut(BaseModel):
     id: int
     text: str
-    user_id: int
+    user_id: uuid.UUID
     created_at: datetime
 
     class Config:
