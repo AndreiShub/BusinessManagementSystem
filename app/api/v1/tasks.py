@@ -48,15 +48,20 @@ async def list_tasks(
 
 
 @router.get("/{team_id}/tasks/{task_id}")
-def get_task(
+async def get_task(
     team_id: uuid.UUID,
     task_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     user=Depends(current_active_user),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    result = await db.execute(
+        select(Task).where(Task.id == task_id, Task.team_id == team_id)
+    )
+    task = result.scalar_one_or_none()
+
     if not task:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail="Task not found")
+
     return task
 
 
@@ -156,12 +161,19 @@ async def delete_task(
 
 
 @router.get("/{team_id}/tasks/{task_id}/rating")
-def get_my_rating(
-    task_id: int,
+async def get_my_rating(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     user=Depends(current_active_user),
 ):
-    rating = db.query(TaskRating).filter_by(task_id=task_id, user_id=user.id).first()
+    stmt = select(TaskRating).where(
+        TaskRating.task_id == task_id,
+        TaskRating.user_id == user.id,
+    )
+
+    result = await db.execute(stmt)
+    rating = result.scalar_one_or_none()
 
     if not rating:
         return {"score": None}
@@ -169,49 +181,77 @@ def get_my_rating(
     return {"score": rating.score}
 
 
-@router.get("/{team_id}/tasks/{task_id}/ratings", response_model=list[TaskRatingOut])
-def get_task_ratings(
-    task_id: int,
+@router.get(
+    "/{team_id}/tasks/{task_id}/ratings",
+    response_model=list[TaskRatingOut],
+)
+async def get_task_ratings(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    return db.query(TaskRating).filter_by(task_id=task_id).all()
+    stmt = select(TaskRating).where(TaskRating.task_id == task_id)
+
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
 
 @router.post("/{team_id}/tasks/{task_id}/rating")
-def rate_task(
-    task_id: int,
+async def rate_task(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
     data: TaskRatingCreate,
     db: AsyncSession = Depends(get_db),
     user=Depends(current_active_user),
 ):
-    rating = db.query(TaskRating).filter_by(task_id=task_id, user_id=user.id).first()
+    stmt = select(TaskRating).where(
+        TaskRating.task_id == task_id,
+        TaskRating.user_id == user.id,
+    )
+
+    result = await db.execute(stmt)
+    rating = result.scalar_one_or_none()
 
     if rating:
         rating.score = data.score
     else:
-        rating = TaskRating(task_id=task_id, user_id=user.id, score=data.score)
+        rating = TaskRating(
+            task_id=task_id,
+            user_id=user.id,
+            score=data.score,
+        )
         db.add(rating)
 
-    db.commit()
+    await db.commit()
     return {"status": "ok"}
 
 
-@router.get("/{team_id}/tasks/{task_id}/comments", response_model=list[TaskCommentOut])
-def get_comments(
-    task_id: int,
+@router.get(
+    "/{team_id}/tasks/{task_id}/comments",
+    response_model=list[TaskCommentOut],
+)
+async def get_comments(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    return (
-        db.query(TaskComment)
-        .filter_by(task_id=task_id)
+    stmt = (
+        select(TaskComment)
+        .where(TaskComment.task_id == task_id)
         .order_by(TaskComment.created_at)
-        .all()
     )
 
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
-@router.post("/{team_id}/tasks/{task_id}/comments", response_model=TaskCommentOut)
-def add_comment(
-    task_id: int,
+
+@router.post(
+    "/{team_id}/tasks/{task_id}/comments",
+    response_model=TaskCommentOut,
+)
+async def add_comment(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
     data: TaskCommentCreate,
     db: AsyncSession = Depends(get_db),
     user=Depends(current_active_user),
@@ -221,7 +261,9 @@ def add_comment(
         user_id=user.id,
         text=data.text,
     )
+
     db.add(comment)
-    db.commit()
-    db.refresh(comment)
+    await db.commit()
+    await db.refresh(comment)
+
     return comment
