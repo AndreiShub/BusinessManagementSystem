@@ -47,6 +47,19 @@ async def list_tasks(
     return tasks
 
 
+@router.get("/{team_id}/tasks/{task_id}")
+def get_task(
+    team_id: uuid.UUID,
+    task_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(current_active_user),
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404)
+    return task
+
+
 @router.post("/{team_id}/tasks", response_model=TaskRead)
 async def create_task(
     team_id: uuid.UUID,
