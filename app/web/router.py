@@ -53,7 +53,7 @@ def task_page(task_id: uuid.UUID, team_id: uuid.UUID, request: Request):
         {
             "request": request,
             "task_id": task_id,
-            "team_id": team_id,  # добавляем team_id в шаблон
+            "team_id": team_id,
         },
     )
 
