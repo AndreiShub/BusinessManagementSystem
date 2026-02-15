@@ -60,15 +60,14 @@ def setup_admin(app: FastAPI):
 
     class UserAdmin(ModelView, model=User):
         column_list = [
-        User.nickname,  # Ник на первом месте
+        User.nickname,
         User.email,
         User.is_active,
         User.is_superuser,
         User.is_manager,
-        User.id,  # UUID тоже показываем, но не на первом месте
+        User.id,
     ]
     
-    # Переименовываем колонки для красивого отображения
     column_labels = {
         User.nickname: "Nickname",
         User.email: "Email",
@@ -78,10 +77,8 @@ def setup_admin(app: FastAPI):
         User.id: "UUID",
     }
     
-    # Сортировка по умолчанию по нику
-    column_default_sort = [(User.nickname, True)]  # True для возрастания
+    column_default_sort = [(User.nickname, True)]
     
-    # Делаем ник кликабельным для перехода к деталям
     column_details_list = [
         User.nickname,
         User.email,
@@ -91,28 +88,21 @@ def setup_admin(app: FastAPI):
         User.is_manager,
     ]
     
-    # Форматирование колонок
     column_formatters = {
-        User.nickname: lambda m, a: f"@{m.nickname}"  # Добавляет @ перед ником
+        User.nickname: lambda m, a: f"@{m.nickname}"
     }
     
-    # Поиск по нику и email
     column_searchable_list = [
         User.nickname,
         User.email,
     ]
     
-    # Фильтры
     column_filters = [
         User.is_active,
         User.is_superuser,
         User.is_manager,
     ]
     
-    # Можно скрыть UUID из списка, если не нужен
-    # column_list.remove(User.id)
-    
-    # Настройка имени в навигации
     name = "User"
     name_plural = "Users"
     icon = "fa-solid fa-user"
