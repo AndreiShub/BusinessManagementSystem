@@ -9,6 +9,7 @@ bcrypt==5.0.0
 black==26.1.0
 cffi==2.0.0
 click==8.3.1
+coolname==3.0.0
 cryptography==46.0.4
 dnspython==2.8.0
 ecdsa==0.19.1
