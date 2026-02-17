@@ -19,8 +19,12 @@ class JoinTeamRequest(BaseModel):
     code: str
 
 
+class TeamMemberUser(BaseModel):
+    id: uuid.UUID
+    email: str
+
 class TeamMemberRead(BaseModel):
-    user_id: uuid.UUID
+    user: TeamMemberUser
     role: str
 
     class Config:

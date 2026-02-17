@@ -5,7 +5,10 @@
 
 <form id="create-task-form">
   <input id="task-title" placeholder="Название задачи" required>
-  <input id="task-assignee" placeholder="ID исполнителя (опционально)">
+  <select id="assignee-select">
+    <option value="">Назначить исполнителя</option>
+  </select>
+   <div id="assignee-chips"></div>
   <input id="task-deadline" type="date" required>
   <select id="task-status">
     <option value="open">Открыто</option>

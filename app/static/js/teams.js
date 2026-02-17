@@ -14,28 +14,51 @@ async function loadTeams() {
 
   teams.forEach(team => {
     const li = document.createElement("li");
+    li.style.marginBottom = "12px";
 
+    // название команды
     const title = document.createElement("strong");
     title.textContent = team.name;
 
+    // код для вступления
+    const code = document.createElement("code");
+    code.textContent = team.code;
+    code.style.marginLeft = "6px";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Скопировать код";
+    copyBtn.style.marginLeft = "6px";
+    copyBtn.title = "Скопировать код";
+
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(team.code);
+      alert("Код приглашения скопирован");
+    });
+
+    // кнопка открыть задачи
     const btn = document.createElement("button");
     btn.textContent = "Открыть задачи";
+    btn.style.marginLeft = "12px";
+
     btn.addEventListener("click", () => {
-    const url = `/teams/${team.id}/tasks`;
-    window.location.assign(url);
+      const url = `/teams/${team.id}/tasks`;
+      window.location.assign(url);
     });
+
+    // сборка DOM
     li.appendChild(title);
-    li.appendChild(document.createTextNode(" "));
+    li.appendChild(document.createTextNode(" : "));
+    li.appendChild(code);
+    li.appendChild(copyBtn);
     li.appendChild(btn);
 
     list.appendChild(li);
   });
 }
 
-
-
 document.getElementById("create-team-form").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const token = localStorage.getItem("token");
   const name = document.getElementById("team-name").value;
 
@@ -57,7 +80,7 @@ document.getElementById("create-team-form").addEventListener("submit", async (e)
   }
 
   const team = await res.json();
-  alert(`Команда ${team.name} создана`);
+  alert(`Команда "${team.name}" создана`);
   loadTeams();
 });
 

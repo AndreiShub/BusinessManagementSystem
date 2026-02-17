@@ -1,7 +1,9 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.db.models.user import User
 from app.db.session import get_db
 from app.db.models.team import Team
 from app.db.models.team_member import TeamMember, TeamRole
@@ -54,11 +56,24 @@ async def join_team(
     return {"message": "Joined the team successfully"}
 
 
-@router.get("/{team_id}/members", response_model=list[TeamMemberRead])
-async def list_team_members(
-    team_id,
-    member=Depends(get_team_admin),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(select(TeamMember).where(TeamMember.team_id == team_id))
-    return result.scalars().all()
+@router.get("/{team_id}/members")
+async def get_team_members(team_id: UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)):
+    result = await db.execute(
+        select(TeamMember, User)
+        .join(User, User.id == TeamMember.user_id)
+        .where(TeamMember.team_id == team_id)
+    )
+
+    members = []
+    for tm, user in result.all():
+        members.append({
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "nickname": user.nickname or user.email
+            },
+            "role": tm.role
+        })
+
+    return members
+

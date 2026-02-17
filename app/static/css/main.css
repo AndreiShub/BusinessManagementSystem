@@ -204,3 +204,40 @@ tr:hover {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
+
+#assignee-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px;
+  background-color: #e0e0e0; /* светло-серый фон */
+  color: #000000; /* черный текст */
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.chip button {
+  background: none;
+  border: none;
+  margin-left: 6px;
+  cursor: pointer;
+  color: #555; /* цвет крестика */
+}
+
+.chip button:hover {
+  color: #f00; /* красный крестик при наведении */
+}
+

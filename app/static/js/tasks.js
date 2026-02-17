@@ -1,15 +1,32 @@
+// ==============================
+// utils
+// ==============================
 function getTeamIdFromUrl() {
   const parts = window.location.pathname.split("/");
-  return parts[2]; // /teams/{team_id}/tasks → parts[2] = team_id
+  return parts[2]; // /teams/{team_id}/tasks
 }
 
+function getAuthHeaders() {
+  return {
+    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    "Content-Type": "application/json"
+  };
+}
+
+// ==============================
+// state
+// ==============================
+const teamId = getTeamIdFromUrl();
+let selectedAssigneeId = null;
+
+// ==============================
+// tasks
+// ==============================
 async function loadTasks() {
-  const token = localStorage.getItem("token");
-  const teamId = getTeamIdFromUrl();
-  if (!token || !teamId) return;
+  if (!teamId) return;
 
   const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
-    headers: { "Authorization": `Bearer ${token}` }
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) return;
@@ -19,114 +36,220 @@ async function loadTasks() {
   list.innerHTML = "";
 
   tasks.forEach(task => {
-  const li = document.createElement("li");
-  li.style.padding = "8px";
-  li.style.marginBottom = "6px";
-  li.style.cursor = "pointer"; // курсор как ссылка
+    const li = document.createElement("li");
+    li.style.padding = "8px";
+    li.style.marginBottom = "6px";
+    li.style.cursor = "pointer";
 
-  // при клике на задачу — переходим на страницу задачи
-  li.onclick = () => {
-  const teamId = localStorage.getItem("currentTeamId");
-  window.location.href = `/teams/${teamId}/tasks/${task.id}/page`;
-};
+    li.onclick = () => {
+      window.location.href = `/teams/${teamId}/tasks/${task.id}/page`;
+    };
 
-  li.innerHTML = `
-    <strong>${task.title}</strong> — ${task.status} —
-    Исполнитель: ${task.assignee_id || 'нет'}
-    <button onclick="event.stopPropagation(); editTask('${task.id}')">Редактировать</button>
-    <button onclick="event.stopPropagation(); deleteTask('${task.id}')">Удалить</button>
-  `;
+    li.innerHTML = `
+      <strong>${task.title}</strong> — ${task.status} —
+      Исполнители: ${task.assignee?.email || "нет"}
+      <button data-edit="${task.id}">Редактировать</button>
+      <button data-delete="${task.id}">Удалить</button>
+    `;
 
-  list.appendChild(li);
-});
-}
-
-document.addEventListener("DOMContentLoaded", loadTasks);
-
-// Создание задачи
-document.getElementById("create-task-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const token = localStorage.getItem("token");
-  if (!token || !currentTeamId) return alert("Выберите команду");
-
-  const data = {
-    title: document.getElementById("task-title").value,
-    assignee_id: document.getElementById("task-assignee").value || null,
-    deadline: document.getElementById("task-deadline").value,
-    status: document.getElementById("task-status").value
-  };
-
-  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
+    list.appendChild(li);
   });
 
-  if (!res.ok) {
-    const err = await res.json();
-    alert("Ошибка: " + (err.detail || JSON.stringify(err)));
-    return;
-  }
+  // делегирование событий
+  list.querySelectorAll("[data-delete]").forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      deleteTask(btn.dataset.delete);
+    };
+  });
 
-  alert("Задача создана!");
-  loadTasks();
-});
+  list.querySelectorAll("[data-edit]").forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      editTask(btn.dataset.edit);
+    };
+  });
+}
 
-// Удаление задачи
+// ==============================
+// create task
+// ==============================
+document
+  .getElementById("create-task-form")
+  .addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const data = {
+      title: document.getElementById("task-title").value,
+      assignee_id: selectedAssigneeId,
+      deadline: document.getElementById("task-deadline").value,
+      status: document.getElementById("task-status").value
+    };
+
+    const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
+    }
+
+    resetAssignee();
+    loadTasks();
+  });
+
+// ==============================
+// delete / edit
+// ==============================
 async function deleteTask(taskId) {
-  const token = localStorage.getItem("token");
-  if (!token || !currentTeamId) return;
+  const res = await fetch(
+    `/api/v1/teams/${teamId}/tasks/${taskId}`,
+    { method: "DELETE", headers: getAuthHeaders() }
+  );
 
-  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks/${taskId}`, {
-    method: "DELETE",
-    headers: { "Authorization": `Bearer ${token}` }
-  });
+  if (!res.ok) return alert("Ошибка удаления");
 
-  if (!res.ok) {
-    const err = await res.json();
-    alert("Ошибка: " + (err.detail || JSON.stringify(err)));
-    return;
-  }
-
-  alert("Задача удалена!");
   loadTasks();
 }
 
-// Редактирование задачи (например изменить статус)
 async function editTask(taskId) {
-  const newStatus = prompt("Введите новый статус: open, in_progress, done");
+  const newStatus = prompt("open | in_progress | done");
   if (!newStatus) return;
 
-  const token = localStorage.getItem("token");
+  const res = await fetch(
+    `/api/v1/teams/${teamId}/tasks/${taskId}`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status: newStatus })
+    }
+  );
 
-  const res = await fetch(`/api/v1/teams/${currentTeamId}/tasks/${taskId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ status: newStatus })
-  });
+  if (!res.ok) return alert("Ошибка обновления");
 
-  if (!res.ok) {
-    const err = await res.json();
-    alert("Ошибка: " + (err.detail || JSON.stringify(err)));
-    return;
-  }
-
-  alert("Статус обновлён!");
   loadTasks();
 }
 
-// Пример: задать team_id при загрузке страницы
+// ==============================
+// assignees (single now, ready for multiple)
+// ==============================
+const assigneeSelect = document.getElementById("assignee-select");
+const chipsContainer = document.getElementById("assignee-chips");
+
+async function loadTeamMembers(teamId) {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  const res = await fetch(`/api/v1/teams/${teamId}/members`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка загрузки участников");
+    return;
+  }
+
+  const members = await res.json();
+
+  assigneeSelect.innerHTML = `<option value="">Назначить исполнителя</option>`;
+
+  members.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.user.id;
+    opt.textContent = m.user.nickname || m.user.email;
+    assigneeSelect.appendChild(opt);
+  });
+}
+
+
+
+const selectedAssignees = []; // массив выбранных исполнителей
+
+assigneeSelect.addEventListener("change", () => {
+  const id = assigneeSelect.value;
+  const label = assigneeSelect.selectedOptions[0]?.textContent;
+  if (!id || !label) return;
+
+  // если уже выбран, не добавляем повторно
+  if (selectedAssignees.find(a => a.id === id)) {
+    assigneeSelect.value = "";
+    return;
+  }
+
+  selectedAssignees.push({ id, label });
+  assigneeSelect.value = ""; // сбрасываем селект
+  renderChips();
+});
+
+function renderChips() {
+  chipsContainer.innerHTML = "";
+  selectedAssignees.forEach(a => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.innerHTML = `
+      ${a.label} <button type="button">×</button>
+    `;
+    // удаление конкретного исполнителя
+    chip.querySelector("button").onclick = () => {
+      const index = selectedAssignees.findIndex(sa => sa.id === a.id);
+      if (index !== -1) selectedAssignees.splice(index, 1);
+      renderChips();
+    };
+    chipsContainer.appendChild(chip);
+  });
+}
+
+// при отправке формы
+document
+  .getElementById("create-task-form")
+  .addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const data = {
+      title: document.getElementById("task-title").value,
+      assignee_id: selectedAssignees.map(a => a.id), // теперь массив
+      deadline: document.getElementById("task-deadline").value,
+      status: document.getElementById("task-status").value
+    };
+
+    const token = localStorage.getItem("token");
+    const teamId = getTeamIdFromUrl();
+
+    const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
+    }
+
+    selectedAssignees.length = 0; // очищаем массив
+    renderChips(); // очищаем чипы
+    loadTasks(); // перезагружаем задачи
+  });
+
+
+// ==============================
+// init
+// ==============================
 document.addEventListener("DOMContentLoaded", () => {
-  currentTeamId = localStorage.getItem("currentTeamId"); // можно хранить выбранную команду
+  const teamId = getTeamIdFromUrl();
+  if (!teamId) return;
+
   const teamName = localStorage.getItem("currentTeamName");
-  if (teamName) document.getElementById("team-name").textContent = teamName;
+  if (teamName) {
+    document.getElementById("team-name").textContent = teamName;
+  }
 
   loadTasks();
+  loadTeamMembers(teamId);
 });
