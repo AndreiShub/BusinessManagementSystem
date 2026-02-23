@@ -1,3 +1,4 @@
+from typing import Optional
 import uuid
 from fastapi_users import schemas
 
@@ -13,5 +14,5 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    nickname: str | None = None
-    is_manager: bool
+    email: Optional[str]
+    nickname: Optional[str]

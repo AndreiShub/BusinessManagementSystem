@@ -241,3 +241,20 @@ tr:hover {
   color: #f00; /* красный крестик при наведении */
 }
 
+#profile-edit-form button,
+#deactivate-account {
+    margin-top: 10px;
+    margin-right: 10px; /* немного пространства между кнопками */
+}
+
+.danger {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.danger:hover {
+    background-color: #ff7875;
+}

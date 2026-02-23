@@ -61,3 +61,7 @@ def task_page(task_id: uuid.UUID, team_id: uuid.UUID, request: Request):
 @router.get("/join")
 async def join_page(request: Request):
     return templates.TemplateResponse("join.html", {"request": request})
+
+@router.get("/profile")
+async def join_page(request: Request):
+    return templates.TemplateResponse("profile.html", {"request": request})

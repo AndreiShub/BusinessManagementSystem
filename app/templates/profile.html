@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<body>
+
+<h2>Профиль пользователя</h2>
+
+<div id="profile-display">
+    <p><strong>Email:</strong> <span id="email-display"></span></p>
+    <p><strong>Никнейм:</strong> <span id="nickname-display"></span></p>
+    <p><strong>Суперпользователь:</strong> <span id="superuser-display"></span></p>
+    <p><strong>Менеджер:</strong> <span id="manager-display"></span></p>
+
+    <button id="edit-profile-btn">Редактировать</button>
+</div>
+
+<form id="profile-edit-form" style="display:none;">
+    <label>
+        Email
+        <input type="email" id="email">
+    </label>
+
+    <label>
+        Никнейм
+        <input type="text" id="nickname">
+        <div id="nickname-error" class="error"></div>
+    </label>
+
+    <h3>Смена пароля</h3>
+    <label>
+        Текущий пароль
+        <input type="password" id="current-password">
+    </label>
+    <label>
+        Новый пароль
+        <input type="password" id="new-password">
+    </label>
+    <label>
+        Повторите новый пароль
+        <input type="password" id="new-password-2">
+        <div id="password-error" class="error"></div>
+    </label>
+
+    <button type="submit">Сохранить изменения</button>
+    <button type="button" id="cancel-edit">Отмена</button>
+</form>
+
+<button class="danger" id="deactivate-account" style="display:none;">Деактивировать аккаунт</button>
+<script src="/static/js/profile.js"></script>
+{% endblock %}
