@@ -1,11 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>Business Management System</h1>
+<div class="container">
+    <h1>Календарь задач и встреч</h1>
 
-<p>Простое управление командами и задачами</p>
+    <div class="calendar-header">
+        <button id="prevMonthBtn">&lt; Предыдущий</button>
+        <h2 id="currentMonthYear">Май 2024</h2>
+        <button id="nextMonthBtn">Следующий &gt;</button>
+    </div>
 
-{% if false %}
-{% endif %}
+    <div id="calendar" class="calendar-grid">
+        <!-- Дни недели будут вставлены скриптом -->
+    </div>
+
+    <div class="event-details">
+        <h3>События на <span id="selectedDateTitle">сегодня</span>:</h3>
+        <ul id="eventList">
+            <li>Выберите дату в календаре</li>
+        </ul>
+    </div>
+</div>
+
+<script src="/static/js/index.js"></script>
+
 
 {% endblock %}

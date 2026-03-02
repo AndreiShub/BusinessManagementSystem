@@ -258,3 +258,575 @@ tr:hover {
 .danger:hover {
     background-color: #ff7875;
 }
+/* ========= КАЛЕНДАРЬ (ТЕМНАЯ ТЕМА) ========= */
+
+/* Основной контейнер календаря */
+.calendar-wrapper {
+    background-color: #020617; /* slate-950 */
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    border: 1px solid #1e293b;
+}
+
+/* Заголовок календаря с навигацией */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 1.5rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #f8fafc, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Кнопки навигации */
+.calendar-nav-btn {
+    background-color: #1e293b;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+    padding: 0.6rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.calendar-nav-btn:hover {
+    background-color: #334155;
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+.calendar-nav-btn:active {
+    transform: translateY(1px);
+}
+
+/* Сетка календаря */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 1.5rem;
+}
+
+/* Дни недели */
+.weekday {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.75rem;
+    background-color: #1e293b;
+    color: #94a3b8;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid #334155;
+}
+
+/* Ячейка дня */
+.calendar-day {
+    background-color: #0f172a; /* slate-900 */
+    border: 1px solid #1e293b;
+    min-height: 110px;
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.calendar-day:focus,
+.calendar-day:focus-visible,
+.calendar-day:focus-within {
+    outline: none;
+}
+
+.calendar-day:not(.selected) {
+    border-width: 1px;
+}
+
+.calendar-day:hover:not(.empty):not(.selected) {
+    background-color: #1e293b;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-day:active {
+    background-color: #0f172a;
+}
+
+.calendar-day.selected:active {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+}
+
+/* Выбранный день */
+.calendar-day.selected {
+    background: #0a0e1a;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+/* Номер дня в выделенной ячейке */
+.calendar-day.selected .day-number {
+    color: #38bdf8;
+}
+
+/* Индикаторы событий в выделенной ячейке */
+.calendar-day.selected .event-indicator {
+    color: #ffffff; /* яркий белый текст */
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Задачи в выделенной ячейке */
+.calendar-day.selected .event-task {
+    background-color: rgba(245, 158, 11, 0.5); /* более насыщенный фон */
+    color: #ffffff; /* белый текст */
+    border-left-color: #f59e0b;
+    border: 1px solid #f59e0b;
+    font-weight: 600;
+}
+
+/* Встречи в выделенной ячейке */
+.calendar-day.selected .event-meeting {
+    background-color: rgba(16, 185, 129, 0.5); /* более насыщенный фон */
+    color: #ffffff; /* белый текст */
+    border-left-color: #10b981;
+    border: 1px solid #10b981;
+    font-weight: 600;
+}
+
+/* Завершенные задачи в выделенной ячейке */
+.calendar-day.selected .event-completed {
+    background-color: rgba(16, 185, 129, 0.4);
+    color: #e0e0e0; /* светлый текст */
+    border-left-color: #10b981;
+    border: 1px solid #10b981;
+    text-decoration: line-through;
+    opacity: 0.9;
+}
+
+/* Индикатор "еще X задач" в выделенной ячейке */
+.calendar-day.selected .event-more {
+    background-color: #4a5568; /* темнее */
+    color: #ffffff; /* белый текст */
+    border-left-color: #64748b;
+    border: 1px solid #94a3b8;
+}
+/* Индикатор "еще X задач" в выделенной ячейке */
+.calendar-day.selected .event-more {
+    background-color: #cbd5e0;
+    color: #000000;
+    border-left-color: #64748b;
+    border: 1px solid #94a3b8;
+}
+
+/* Пустые ячейки */
+.calendar-day.empty {
+    background-color: #020617;
+    border: 1px solid #1e293b;
+    opacity: 0.5;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    background-color: #020617;
+    border-color: #1e293b;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Номер дня */
+.day-number {
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    padding-right: 4px;
+}
+
+/* Текущий день (можно добавить класс current-day через JS) */
+.calendar-day.current-day {
+    border-color: #38bdf8;
+    background: linear-gradient(145deg, #1a2639, #0f172a);
+}
+
+.calendar-day.current-day .day-number {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+/* Индикаторы событий */
+.event-indicator {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    margin-bottom: 3px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.event-indicator:hover {
+    transform: translateX(2px);
+    opacity: 0.9;
+}
+
+/* Задачи (желтые) */
+.event-task {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-left-color: #f59e0b;
+}
+
+/* Встречи (зеленые) */
+.event-meeting {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-left-color: #10b981;
+}
+
+/* Завершенные задачи */
+.event-completed {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #6ee7b7;
+    border-left-color: #10b981;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+/* Индикатор "еще X задач" */
+.event-more {
+    background-color: #334155;
+    color: #94a3b8;
+    border-left-color: #64748b;
+    font-style: italic;
+}
+
+/* Панель с деталями событий */
+.event-details {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.event-details h3 {
+    color: #f8fafc;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.event-details h3 span {
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+/* Список событий */
+#eventList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Стили для списка задач в деталях */
+#eventList li {
+    background-color: #020617;
+    border: 1px solid #1e293b;
+    border-left: 4px solid #38bdf8;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    color: #e5e7eb;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#eventList li:hover {
+    background-color: #1e293b;
+    color: #e5e7eb;
+    border-color: #38bdf8;
+    color: #000000;
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Заголовок события в списке при наведении */
+#eventList li:hover strong {
+    color: #0f172a;
+}
+
+/* Описание события в списке при наведении */
+#eventList li:hover small {
+    color: #334155;
+}
+
+/* Заголовок события в списке */
+#eventList li strong {
+    color: #f8fafc;
+    font-size: 0.95rem;
+}
+
+/* Описание события */
+#eventList li small {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 4px;
+}
+
+/* Статус задачи */
+.event-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 8px;
+    color: #020617;
+}
+
+/* Статус задачи */
+.event-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700; /* жирнее */
+    text-transform: uppercase;
+    margin-left: 8px;
+    border: 1px solid;
+}
+
+.event-status.open { 
+    background-color: rgba(56, 189, 248, 0.9); /* ярче */
+    color: #ffffff; /* белый текст */
+    border-color: #38bdf8;
+}
+
+.event-status.in_progress { 
+    background-color: rgba(245, 158, 11, 0.9); /* ярче */
+    color: #ffffff; /* белый текст */
+    border-color: #f59e0b;
+}
+
+.event-status.completed { 
+    background-color: rgba(16, 185, 129, 0.9); /* ярче */
+    color: #ffffff; /* белый текст */
+    border-color: #10b981;
+}
+
+.event-status.cancelled { 
+    background-color: rgba(239, 68, 68, 0.9); /* ярче */
+    color: #ffffff; /* белый текст */
+    border-color: #ef4444;
+}
+
+/* Форма добавления задачи */
+.add-event-form {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.add-event-form h3 {
+    color: #f8fafc;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.add-event-form input,
+.add-event-form textarea,
+.add-event-form select {
+    background-color: #020617;
+    border: 1px solid #1e293b;
+    color: #e5e7eb;
+    border-radius: 10px;
+    padding: 0.75rem;
+    width: 100%;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.add-event-form input:focus,
+.add-event-form textarea:focus,
+.add-event-form select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+    outline: none;
+}
+
+.add-event-form button[type="submit"] {
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: #020617;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.add-event-form button[type="submit"]:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Легенда календаря */
+.calendar-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #0f172a;
+    border-radius: 10px;
+    border: 1px solid #1e293b;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+.legend-color.task { background-color: #f59e0b; }
+.legend-color.meeting { background-color: #10b981; }
+.legend-color.completed { background-color: #6ee7b7; }
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .calendar-header {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .calendar-header h2 {
+        order: -1;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .calendar-grid {
+        gap: 3px;
+    }
+    
+    .weekday {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .calendar-day {
+        min-height: 80px;
+        padding: 4px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .day-number {
+        font-size: 0.8rem;
+    }
+    
+/* Индикаторы событий */
+.event-indicator {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    margin-bottom: 3px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+    
+    .calendar-legend {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 60px;
+    }
+    
+    .event-indicator {
+        display: none; /* Прячем индикаторы на очень маленьких экранах */
+    }
+    
+    .calendar-day:hover .event-indicator {
+        display: block; /* Показываем при наведении */
+        position: absolute;
+        background-color: #1e293b;
+        z-index: 10;
+        width: 120px;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 100%;
+        margin-bottom: 5px;
+        padding: 8px;
+        border-radius: 6px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-day {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Счетчик событий в ячейке */
+.event-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: #38bdf8;
+    color: #020617;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 12px;
+    min-width: 18px;
+    text-align: center;
+}
