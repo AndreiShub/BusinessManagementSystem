@@ -58,7 +58,9 @@ function showEventsForSelectedDay() {
         return;
     }
 
-    const dayEvents = eventsCache.filter(event => event.date === selectedDate);
+    const dayEvents = eventsCache.filter(
+        event => event.date === selectedDate
+    );
 
     if (dayEvents.length === 0) {
         eventListEl.innerHTML = '<li>Нет задач на этот день</li>';
@@ -66,27 +68,31 @@ function showEventsForSelectedDay() {
         eventListEl.innerHTML = '';
         dayEvents.forEach(event => {
             const li = document.createElement('li');
-            
-            // Определяем цвет в зависимости от статуса
-            let statusColor = '#007bff'; // синий по умолчанию
-            if (event.status === 'completed') {
-                statusColor = '#28a745'; // зеленый для завершенных
-            } else if (event.status === 'cancelled') {
-                statusColor = '#dc3545'; // красный для отмененных
-            } else if (event.status === 'in_progress') {
-                statusColor = '#ffc107'; // желтый для в работе
+
+            // здесь вставляем новый код по цвету и тексту
+            let statusColor = '#007bff';
+            let statusText = '';
+
+            if (event.event_type === 'meeting') {
+                statusColor = '#6f42c1'; // фиолетовый для встреч
+                statusText = 'Встреча';
+            } else {
+                if (event.status === 'completed') {
+                    statusColor = '#28a745';
+                } else if (event.status === 'cancelled') {
+                    statusColor = '#dc3545';
+                } else if (event.status === 'in_progress') {
+                    statusColor = '#ffc107';
+                }
+                statusText = event.status ? getStatusInRussian(event.status) : '';
             }
-            
+
             li.style.borderLeftColor = statusColor;
-            
-            // Формируем HTML для элемента списка
-            let timeInfo = event.time ? event.time : 'Весь день';
-            let statusText = event.status ? getStatusInRussian(event.status) : '';
-            
+
             li.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <div>
-                        <strong>${timeInfo}</strong> - ${event.title}
+                        <strong>${event.time || 'Весь день'}</strong> - ${event.title}
                         <br>
                         <small>${event.description || 'Нет описания'}</small>
                     </div>
@@ -95,13 +101,12 @@ function showEventsForSelectedDay() {
                     </span>
                 </div>
             `;
-            
-            // Добавляем обработчик клика для просмотра деталей
+
             li.addEventListener('click', () => {
                 showEventDetails(event.id);
             });
             li.style.cursor = 'pointer';
-            
+
             eventListEl.appendChild(li);
         });
     }

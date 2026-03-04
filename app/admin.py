@@ -60,52 +60,50 @@ def setup_admin(app: FastAPI):
 
     class UserAdmin(ModelView, model=User):
         column_list = [
-        User.nickname,
-        User.email,
-        User.is_active,
-        User.is_superuser,
-        User.is_manager,
-        User.id,
-    ]
-    
-    column_labels = {
-        User.nickname: "Nickname",
-        User.email: "Email",
-        User.is_active: "Active",
-        User.is_superuser: "Superuser",
-        User.is_manager: "Manager",
-        User.id: "UUID",
-    }
-    
-    column_default_sort = [(User.nickname, True)]
-    
-    column_details_list = [
-        User.nickname,
-        User.email,
-        User.id,
-        User.is_active,
-        User.is_superuser,
-        User.is_manager,
-    ]
-    
-    column_formatters = {
-        User.nickname: lambda m, a: f"@{m.nickname}"
-    }
-    
-    column_searchable_list = [
-        User.nickname,
-        User.email,
-    ]
-    
-    column_filters = [
-        User.is_active,
-        User.is_superuser,
-        User.is_manager,
-    ]
-    
-    name = "User"
-    name_plural = "Users"
-    icon = "fa-solid fa-user"
+            User.nickname,
+            User.email,
+            User.is_active,
+            User.is_superuser,
+            User.is_manager,
+            User.id,
+        ]
+
+        column_labels = {
+            User.nickname: "Nickname",
+            User.email: "Email",
+            User.is_active: "Active",
+            User.is_superuser: "Superuser",
+            User.is_manager: "Manager",
+            User.id: "UUID",
+        }
+
+        column_default_sort = [(User.nickname, True)]
+
+        column_details_list = [
+            User.nickname,
+            User.email,
+            User.id,
+            User.is_active,
+            User.is_superuser,
+            User.is_manager,
+        ]
+
+        column_formatters = {User.nickname: lambda m, a: f"@{m.nickname}"}
+
+        column_searchable_list = [
+            User.nickname,
+            User.email,
+        ]
+
+        column_filters = [
+            User.is_active,
+            User.is_superuser,
+            User.is_manager,
+        ]
+
+        name = "User"
+        name_plural = "Users"
+        icon = "fa-solid fa-user"
 
     class TeamAdmin(ModelView, model=Team):
         pass

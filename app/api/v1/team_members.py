@@ -9,8 +9,6 @@ from app.db.models.team import Team
 from app.db.models.team_member import TeamMember, TeamRole
 from app.core.auth import current_active_user
 from app.schemas.team import JoinTeamRequest
-from app.core.dependencies import get_team_admin
-from app.schemas.team import TeamMemberRead
 
 router = APIRouter(prefix="/teams", tags=["team-members"])
 
@@ -57,7 +55,9 @@ async def join_team(
 
 
 @router.get("/{team_id}/members")
-async def get_team_members(team_id: UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)):
+async def get_team_members(
+    team_id: UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)
+):
     result = await db.execute(
         select(TeamMember, User)
         .join(User, User.id == TeamMember.user_id)
@@ -66,14 +66,15 @@ async def get_team_members(team_id: UUID, db: AsyncSession = Depends(get_db), us
 
     members = []
     for tm, user in result.all():
-        members.append({
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "nickname": user.nickname or user.email
-            },
-            "role": tm.role
-        })
+        members.append(
+            {
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "nickname": user.nickname or user.email,
+                },
+                "role": tm.role,
+            }
+        )
 
     return members
-

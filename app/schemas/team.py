@@ -23,6 +23,7 @@ class TeamMemberUser(BaseModel):
     id: uuid.UUID
     email: str
 
+
 class TeamMemberRead(BaseModel):
     user: TeamMemberUser
     role: str

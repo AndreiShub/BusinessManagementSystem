@@ -2,17 +2,21 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from app.core.auth import fastapi_users, auth_backend
+from app.db.models.meeting import Meeting, MeetingParticipant
 from app.db.models.task import Task
+from app.db.models.user import User
 from app.db.session import get_db
 from app.db.user_db import get_user_db
 from app.schemas.users import UserRead, UserCreate, UserUpdate
 from app.api.v1.teams import router as teams_router
 from app.api.v1.team_members import router as team_members_router
 from app.api.v1.tasks import router as tasks_router
+from app.api.v1.meetings import router as meetings_router
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.auth import current_active_user
 
 router = APIRouter(prefix="/api/v1")
 
@@ -40,6 +44,9 @@ router.include_router(team_members_router)
 
 router.include_router(tasks_router)
 
+router.include_router(meetings_router)
+
+
 @router.patch("/users/me")
 async def update_me(
     user_update: UserUpdate,
@@ -66,91 +73,123 @@ async def update_me(
         "is_manager": user.is_manager,
     }
 
+
 @router.get("/events")
 async def get_events(
     year: Optional[int] = Query(None),
     month: Optional[int] = Query(None),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(current_active_user),
 ):
-    """
-    Возвращает задачи за указанный месяц.
-    Если год и месяц не указаны, возвращает задачи за текущий месяц.
-    """
-    # Если год и месяц не указаны, используем текущие
     if year is None or month is None:
         today = datetime.now()
         year = today.year
         month = today.month
-    
-    # Создаем даты начала и конца месяца для фильтрации
+
     start_date = datetime(year, month, 1)
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1)
-    else:
-        end_date = datetime(year, month + 1, 1)
-    
-    # Запрос к БД для получения задач в указанном месяце
-    query = select(Task).where(
+    end_date = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+
+    events: list[dict] = []
+
+    # ---------- TASKS ----------
+    task_query = select(Task).where(
         Task.deadline >= start_date,
-        Task.deadline < end_date
+        Task.deadline < end_date,
+        Task.assignee_id == current_user.id,
     )
-    
-    result = await db.execute(query)
-    tasks = result.scalars().all()
-    
-    # Преобразуем задачи в формат, понятный фронтенду
-    events = []
+
+    tasks = (await db.execute(task_query)).scalars().all()
+
     for task in tasks:
-        # Определяем тип события (по умолчанию task)
-        event_type = "task"
-        
-        # Если у задачи есть deadline, используем его
-        if task.deadline:
-            event_date = task.deadline.date()
-            event_time = task.deadline.time().strftime("%H:%M") if task.deadline.time() else None
-        else:
-            # Если дедлайна нет, можно пропустить задачу или установить текущую дату
-            continue
-        
-        # Создаем событие для календаря
-        event = {
-            "id": str(task.id),
-            "title": task.title,
-            "description": task.description or "",
-            "event_type": event_type,
-            "date": event_date.isoformat(),
-            "time": event_time,
-            "status": task.status.value if task.status else None,
-            "assignee_id": str(task.assignee_id) if task.assignee_id else None,
-            "team_id": str(task.team_id)
-        }
-        events.append(event)
-    
+        events.append(
+            {
+                "id": str(task.id),
+                "title": task.title,
+                "description": task.description or "",
+                "event_type": "task",
+                "date": task.deadline.date().isoformat(),
+                "time": task.deadline.strftime("%H:%M"),
+                "status": task.status.value if task.status else None,
+                "team_id": str(task.team_id),
+            }
+        )
+
+    # ---------- MEETINGS ----------
+    meeting_query = (
+        select(Meeting)
+        .join(MeetingParticipant)
+        .where(
+            MeetingParticipant.user_id == current_user.id,
+            Meeting.start_time >= start_date,
+            Meeting.start_time < end_date,
+            Meeting.is_cancelled.is_(False),
+        )
+    )
+
+    meetings = (await db.execute(meeting_query)).scalars().all()
+
+    for meeting in meetings:
+        events.append(
+            {
+                "id": f"meeting:{meeting.id}",
+                "title": meeting.title,
+                "description": "Встреча",
+                "event_type": "meeting",
+                "date": meeting.start_time.date().isoformat(),
+                "time": meeting.start_time.strftime("%H:%M"),
+                "status": "cancelled" if meeting.is_cancelled else "planned",
+                "team_id": str(meeting.team_id),
+            }
+        )
+
     return events
 
-# Эндпоинт для получения деталей конкретной задачи
+
+# Эндпоинт для получения деталей конкретного события
 @router.get("/events/{event_id}")
 async def get_event_details(
     event_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(current_active_user),
 ):
-    """Получает детальную информацию о задаче."""
-    try:
-        task_uuid = uuid.UUID(event_id)
-        query = select(Task).where(Task.id == task_uuid)
-        result = await db.execute(query)
-        task = result.scalar_one_or_none()
-        
-        if task:
-            return {
-                "id": str(task.id),
-                "title": task.title,
-                "description": task.description,
-                "deadline": task.deadline.isoformat() if task.deadline else None,
-                "status": task.status.value,
-                "assignee": str(task.assignee_id) if task.assignee_id else None,
-                "creator": str(task.creator_id)
-            }
-        return {"error": "Event not found"}
-    except ValueError:
-        return {"error": "Invalid event ID"}
+    # ---------- MEETING ----------
+    if event_id.startswith("meeting:"):
+        meeting_id = int(event_id.split(":")[1])
+
+        query = (
+            select(Meeting)
+            .join(MeetingParticipant)
+            .where(
+                Meeting.id == meeting_id,
+                MeetingParticipant.user_id == current_user.id,
+            )
+        )
+
+        meeting = (await db.execute(query)).scalar_one_or_none()
+        if not meeting:
+            raise HTTPException(404, "Meeting not found")
+
+        return {
+            "id": event_id,
+            "title": meeting.title,
+            "description": "Встреча",
+            "start_time": meeting.start_time.isoformat(),
+            "end_time": meeting.end_time.isoformat(),
+            "event_type": "meeting",
+        }
+
+    # ---------- TASK ----------
+    task_uuid = uuid.UUID(event_id)
+    task = await db.get(Task, task_uuid)
+
+    if not task:
+        raise HTTPException(404, "Task not found")
+
+    return {
+        "id": str(task.id),
+        "title": task.title,
+        "description": task.description,
+        "deadline": task.deadline.isoformat() if task.deadline else None,
+        "status": task.status.value,
+        "event_type": "task",
+    }

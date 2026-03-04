@@ -249,11 +249,12 @@ async def get_comments(
         TaskCommentOut(
             id=comment.id,
             text=comment.text,
-            nickname= nickname,
+            nickname=nickname,
             created_at=comment.created_at,
         )
         for comment, nickname in result.all()
     ]
+
 
 @router.post(
     "/{team_id}/tasks/{task_id}/comments",
