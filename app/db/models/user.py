@@ -14,9 +14,13 @@ class User(Base):
         default=uuid.uuid4,
     )
 
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False,
+    )
 
-    nickname = mapped_column(
+    nickname: Mapped[str] = mapped_column(
         String,
         unique=True,
         index=True,

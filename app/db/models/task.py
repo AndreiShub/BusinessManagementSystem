@@ -85,8 +85,9 @@ class TaskComment(Base):
     __tablename__ = "task_comments"
 
     id = Column(Integer, primary_key=True)
-    task_id = Column(ForeignKey("tasks.id"), nullable=False)
-    user_id = Column(ForeignKey("users.id"), nullable=False)
-
     text = Column(Text, nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

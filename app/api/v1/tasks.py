@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from app.db.models.user import User
 from app.db.session import get_db
 from app.db.models.task import Task, TaskRating, TaskComment
 from app.db.models.team_member import TeamMember
@@ -236,14 +237,23 @@ async def get_comments(
     db: AsyncSession = Depends(get_db),
 ):
     stmt = (
-        select(TaskComment)
+        select(TaskComment, User.nickname)
+        .join(User, TaskComment.user_id == User.id)
         .where(TaskComment.task_id == task_id)
         .order_by(TaskComment.created_at)
     )
 
     result = await db.execute(stmt)
-    return result.scalars().all()
 
+    return [
+        TaskCommentOut(
+            id=comment.id,
+            text=comment.text,
+            nickname= nickname,
+            created_at=comment.created_at,
+        )
+        for comment, nickname in result.all()
+    ]
 
 @router.post(
     "/{team_id}/tasks/{task_id}/comments",

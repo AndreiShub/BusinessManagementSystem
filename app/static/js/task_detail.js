@@ -68,9 +68,9 @@ async function loadComments() {
     const div = document.createElement("div");
     div.style.marginBottom = "6px";
     div.innerHTML = `
-      <strong>User ${c.user_id}</strong>: ${c.text}<br>
+      <strong>${c.nickname}</strong>: ${c.text}<br>
       <small>${new Date(c.created_at).toLocaleString()}</small>
-    `;
+`;
     list.appendChild(div);
   }
 }

@@ -51,7 +51,7 @@ class TaskCommentCreate(BaseModel):
 class TaskCommentOut(BaseModel):
     id: int
     text: str
-    user_id: uuid.UUID
+    nickname: str
     created_at: datetime
 
     class Config:
