@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.db.models.user import User
 from app.db.session import get_db
-from app.db.models.task import Task, TaskRating, TaskComment
+from app.db.models.task import Task, TaskAssignee, TaskRating, TaskComment
 from app.db.models.team_member import TeamMember
 from app.schemas.task import (
     TaskCreate,
@@ -23,29 +23,33 @@ from app.core.task_permissions import ensure_can_update_task
 router = APIRouter(prefix="/teams", tags=["tasks"])
 
 
+# list_tasks
 @router.get("/{team_id}/tasks", response_model=list[TaskRead])
-async def list_tasks(
-    team_id: uuid.UUID,
-    user=Depends(current_active_user),
-    db: AsyncSession = Depends(get_db),
-):
-    # 1️⃣ Проверяем, что пользователь состоит в команде
+async def list_tasks(team_id: uuid.UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)):
     result = await db.execute(
-        select(TeamMember).where(
-            TeamMember.team_id == team_id,
-            TeamMember.user_id == user.id,
-        )
+        select(Task).where(Task.team_id == team_id)
     )
-    membership = result.scalar_one_or_none()
-
-    if not membership:
-        raise HTTPException(status_code=403, detail="Not a team member")
-
-    # 2️⃣ Получаем задачи команды
-    result = await db.execute(select(Task).where(Task.team_id == team_id))
-
     tasks = result.scalars().all()
-    return tasks
+
+    tasks_with_assignees = []
+    for task in tasks:
+        res = await db.execute(
+            select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
+        )
+        assignee_ids = [r[0] for r in res.all()]
+        tasks_with_assignees.append(
+            TaskRead(
+                id=task.id,
+                title=task.title,
+                description=task.description,
+                deadline=task.deadline,
+                status=task.status,
+                team_id=task.team_id,
+                assignee_ids=assignee_ids
+            )
+        )
+
+    return tasks_with_assignees
 
 
 @router.get("/{team_id}/tasks/{task_id}")
@@ -75,28 +79,50 @@ async def create_task(
 ):
     await ensure_can_manage_tasks(db, user.id, team_id)
 
-    # проверка исполнителя
-    if data.assignee_id:
+    # проверяем всех исполнителей
+    for uid in data.assignee_ids:
         result = await db.execute(
             select(TeamMember).where(
                 TeamMember.team_id == team_id,
-                TeamMember.user_id == data.assignee_id,
+                TeamMember.user_id == uid
             )
         )
         if not result.scalar_one_or_none():
-            raise HTTPException(400, "Assignee is not in the team")
+            raise HTTPException(400, f"User {uid} is not in the team")
 
+    # создаем задачу
     task = Task(
-        **data.model_dump(exclude_unset=True),
+        title=data.title,
+        description=data.description,
+        deadline=data.deadline,
         team_id=team_id,
         creator_id=user.id,
     )
-
     db.add(task)
+    await db.flush()  # получаем task.id
+
+    # добавляем всех исполнителей
+    for uid in data.assignee_ids:
+        db.add(TaskAssignee(task_id=task.id, user_id=uid))
+
     await db.commit()
     await db.refresh(task)
-    return task
 
+    # получить список исполнителей
+    result = await db.execute(
+        select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
+    )
+    assignee_ids = [r[0] for r in result.all()]
+
+    return TaskRead(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        deadline=task.deadline.isoformat() if task.deadline else None,
+        status=task.status,
+        team_id=task.team_id,
+        assignee_ids=assignee_ids
+    )
 
 @router.patch("/{team_id}/tasks/{task_id}", response_model=TaskRead)
 async def update_task(

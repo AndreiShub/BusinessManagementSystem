@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import (
+    Column,
     String,
     DateTime,
     ForeignKey,
@@ -8,7 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
-
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 class Meeting(Base):
     __tablename__ = "meetings"
@@ -16,8 +17,8 @@ class Meeting(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
 
-    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    start_time = Column(TIMESTAMP(timezone=True), nullable=False)
+    end_time = Column(TIMESTAMP(timezone=True), nullable=False)
 
     team_id: Mapped[int] = mapped_column(
         ForeignKey("teams.id", ondelete="CASCADE"),

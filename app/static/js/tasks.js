@@ -72,33 +72,62 @@ async function loadTasks() {
 }
 
 // ==============================
-// create task
+// create task (исправленная версия)
 // ==============================
 document
   .getElementById("create-task-form")
   .addEventListener("submit", async e => {
     e.preventDefault();
 
-    const data = {
-      title: document.getElementById("task-title").value,
-      assignee_id: selectedAssigneeId,
-      deadline: document.getElementById("task-deadline").value,
-      status: document.getElementById("task-status").value
-    };
+    // получаем данные формы
+    const title = document.getElementById("task-title").value;
+    const status = document.getElementById("task-status").value;
+    const deadlineInput = document.getElementById("task-deadline").value;
 
-    const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
+    // преобразуем deadline в ISO 8601 с таймзоной
+    const deadlineISO = deadlineInput ? new Date(deadlineInput).toISOString() : null;
 
-    if (!res.ok) {
-      const err = await res.json();
-      return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
+    // поддержка одного исполнителя (если выбран один) или массива
+    let assigneeData = null;
+    if (selectedAssignees.length === 1) {
+      assigneeData = selectedAssignees[0].id;
+    } else if (selectedAssignees.length > 1) {
+      assigneeData = selectedAssignees.map(a => a.id); // массив, если бекенд поддерживает
     }
 
-    resetAssignee();
-    loadTasks();
+    const data = {
+      title,
+      status,
+      deadline: deadlineISO,
+      assignee_id: assigneeData
+    };
+
+    try {
+      const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
+      }
+
+      // очищаем выбранных исполнителей и чипы
+      selectedAssignees.length = 0;
+      renderChips();
+
+      // перезагружаем задачи
+      loadTasks();
+
+    } catch (error) {
+      console.error(error);
+      alert("Ошибка при создании задачи");
+    }
   });
 
 // ==============================
@@ -201,41 +230,6 @@ function renderChips() {
     chipsContainer.appendChild(chip);
   });
 }
-
-// при отправке формы
-document
-  .getElementById("create-task-form")
-  .addEventListener("submit", async e => {
-    e.preventDefault();
-
-    const data = {
-      title: document.getElementById("task-title").value,
-      assignee_id: selectedAssignees.map(a => a.id), // теперь массив
-      deadline: document.getElementById("task-deadline").value,
-      status: document.getElementById("task-status").value
-    };
-
-    const token = localStorage.getItem("token");
-    const teamId = getTeamIdFromUrl();
-
-    const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
-    }
-
-    selectedAssignees.length = 0; // очищаем массив
-    renderChips(); // очищаем чипы
-    loadTasks(); // перезагружаем задачи
-  });
 
 
 // ==============================
