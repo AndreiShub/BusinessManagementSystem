@@ -32,47 +32,76 @@ async function loadTasks() {
   if (!res.ok) return;
 
   const tasks = await res.json();
+  console.log("Загруженные задачи:", tasks);
+  
   const list = document.getElementById("task-list");
+  if (!list) return;
+  
   list.innerHTML = "";
 
-  tasks.forEach(task => {
+  for (const task of tasks) {
     const li = document.createElement("li");
-    li.style.padding = "8px";
-    li.style.marginBottom = "6px";
+    li.style.padding = "12px";
+    li.style.marginBottom = "8px";
     li.style.cursor = "pointer";
+    li.style.borderLeft = "4px solid #4caf50";
+    li.style.borderRadius = "4px";
+    li.style.backgroundColor = "#2f1b5c";
+    li.style.listStyle = "none";
 
     li.onclick = () => {
       window.location.href = `/teams/${teamId}/tasks/${task.id}/page`;
     };
 
+    // Получаем информацию об исполнителях
+    const assigneeCount = task.assignee_ids?.length || 0;
+    let assigneesText = "нет";
+    
+    if (assigneeCount > 0) {
+      assigneesText = `${assigneeCount} исполнитель(ей)`;
+      // Можно добавить ID для отладки
+      // assigneesText += ` (${task.assignee_ids.join(", ")})`;
+    }
+
     li.innerHTML = `
-      <strong>${task.title}</strong> — ${task.status} —
-      Исполнители: ${task.assignee?.email || "нет"}
-      <button data-edit="${task.id}">Редактировать</button>
-      <button data-delete="${task.id}">Удалить</button>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex-grow: 1;">
+          <strong style="font-size: 16px;">${task.title}</strong>
+          <span style="
+            margin-left: 10px;
+            padding: 2px 8px;
+            background: ${task.status === 'open' ? '#4caf50' : task.status === 'in_progress' ? '#ff9800' : '#9e9e9e'};
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+          ">${task.status}</span>
+          <br>
+          <small style="color: #666; display: block; margin-top: 5px;">
+            📅 ${task.deadline ? new Date(task.deadline).toLocaleString() : 'Нет дедлайна'}
+          </small>
+          <small style="color: #666; display: block;">
+            👥 Исполнители: ${assigneesText}
+          </small>
+        </div>
+        <div style="display: flex; gap: 5px;">
+          <button onclick="event.stopPropagation(); editTask('${task.id}')" 
+                  style="padding: 5px 10px; background: #ffc107; border: none; border-radius: 3px; cursor: pointer;">
+            ✏️ Ред.
+          </button>
+          <button onclick="event.stopPropagation(); deleteTask('${task.id}')" 
+                  style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+            🗑️ Удал.
+          </button>
+        </div>
+      </div>
     `;
 
     list.appendChild(li);
-  });
-
-  // делегирование событий
-  list.querySelectorAll("[data-delete]").forEach(btn => {
-    btn.onclick = e => {
-      e.stopPropagation();
-      deleteTask(btn.dataset.delete);
-    };
-  });
-
-  list.querySelectorAll("[data-edit]").forEach(btn => {
-    btn.onclick = e => {
-      e.stopPropagation();
-      editTask(btn.dataset.edit);
-    };
-  });
+  }
 }
 
 // ==============================
-// create task (исправленная версия)
+// create task
 // ==============================
 document
   .getElementById("create-task-form")
@@ -81,45 +110,60 @@ document
 
     // получаем данные формы
     const title = document.getElementById("task-title").value;
+    const description = document.getElementById("task-description")?.value || "";
     const status = document.getElementById("task-status").value;
     const deadlineInput = document.getElementById("task-deadline").value;
 
     // преобразуем deadline в ISO 8601 с таймзоной
     const deadlineISO = deadlineInput ? new Date(deadlineInput).toISOString() : null;
 
-    // поддержка одного исполнителя (если выбран один) или массива
-    let assigneeData = null;
-    if (selectedAssignees.length === 1) {
-      assigneeData = selectedAssignees[0].id;
-    } else if (selectedAssignees.length > 1) {
-      assigneeData = selectedAssignees.map(a => a.id); // массив, если бекенд поддерживает
+    // ВАЖНО: всегда отправляем массив, даже с одним исполнителем
+    let assignee_ids = [];
+    if (selectedAssignees.length > 0) {
+      assignee_ids = selectedAssignees.map(a => a.id);
     }
 
+    // Правильная структура данных для бэкенда
     const data = {
       title,
-      status,
+      description,
       deadline: deadlineISO,
-      assignee_id: assigneeData
+      assignee_ids: assignee_ids
     };
+
+    console.log("Отправляемые данные:", data);
 
     try {
       const res = await fetch(`/api/v1/teams/${teamId}/tasks`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(data)
       });
 
       if (!res.ok) {
         const err = await res.json();
+        console.error("Ошибка ответа:", err);
         return alert("Ошибка: " + (err.detail || JSON.stringify(err)));
+      }
+
+      const result = await res.json();
+      console.log("Задача создана:", result);
+      
+      // Проверяем, добавились ли исполнители
+      if (result.assignee_ids && result.assignee_ids.length > 0) {
+        console.log("✅ Исполнители добавлены:", result.assignee_ids);
+      } else {
+        console.warn("⚠️ Исполнители не добавились!");
       }
 
       // очищаем выбранных исполнителей и чипы
       selectedAssignees.length = 0;
       renderChips();
+
+      // очищаем форму
+      document.getElementById("task-title").value = "";
+      document.getElementById("task-deadline").value = "";
+      document.getElementById("task-status").value = "open";
 
       // перезагружаем задачи
       loadTasks();
@@ -134,6 +178,8 @@ document
 // delete / edit
 // ==============================
 async function deleteTask(taskId) {
+  if (!confirm("Удалить задачу?")) return;
+  
   const res = await fetch(
     `/api/v1/teams/${teamId}/tasks/${taskId}`,
     { method: "DELETE", headers: getAuthHeaders() }
@@ -145,7 +191,7 @@ async function deleteTask(taskId) {
 }
 
 async function editTask(taskId) {
-  const newStatus = prompt("open | in_progress | done");
+  const newStatus = prompt("Введите новый статус (open | in_progress | done):");
   if (!newStatus) return;
 
   const res = await fetch(
@@ -163,10 +209,11 @@ async function editTask(taskId) {
 }
 
 // ==============================
-// assignees (single now, ready for multiple)
+// assignees
 // ==============================
 const assigneeSelect = document.getElementById("assignee-select");
 const chipsContainer = document.getElementById("assignee-chips");
+const selectedAssignees = []; // массив выбранных исполнителей
 
 async function loadTeamMembers(teamId) {
   const token = localStorage.getItem("token");
@@ -192,10 +239,6 @@ async function loadTeamMembers(teamId) {
     assigneeSelect.appendChild(opt);
   });
 }
-
-
-
-const selectedAssignees = []; // массив выбранных исполнителей
 
 assigneeSelect.addEventListener("change", () => {
   const id = assigneeSelect.value;
@@ -231,7 +274,6 @@ function renderChips() {
   });
 }
 
-
 // ==============================
 // init
 // ==============================
@@ -241,7 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const teamName = localStorage.getItem("currentTeamName");
   if (teamName) {
-    document.getElementById("team-name").textContent = teamName;
+    const teamNameEl = document.getElementById("team-name");
+    if (teamNameEl) teamNameEl.textContent = teamName;
   }
 
   loadTasks();

@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.db.models.user import User
 from app.db.session import get_db
@@ -24,32 +25,47 @@ router = APIRouter(prefix="/teams", tags=["tasks"])
 
 
 # list_tasks
-@router.get("/{team_id}/tasks", response_model=list[TaskRead])
-async def list_tasks(team_id: uuid.UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)):
+@router.get("/{team_id}/tasks")
+async def get_team_tasks(
+    team_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(current_active_user)
+):
+    # Проверяем, что пользователь в команде
+    member = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == current_user.id
+        )
+    )
+    if not member.scalar_one_or_none():
+        raise HTTPException(403, "Not a team member")
+    
+    # Получаем задачи команды с загрузкой исполнителей
     result = await db.execute(
-        select(Task).where(Task.team_id == team_id)
+        select(Task)
+        .where(Task.team_id == team_id)
+        .options(selectinload(Task.assignees))  # 👈 ВАЖНО: загружаем исполнителей
     )
     tasks = result.scalars().all()
-
-    tasks_with_assignees = []
+    
+    # Формируем ответ с исполнителями
+    task_list = []
     for task in tasks:
-        res = await db.execute(
-            select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
-        )
-        assignee_ids = [r[0] for r in res.all()]
-        tasks_with_assignees.append(
-            TaskRead(
-                id=task.id,
-                title=task.title,
-                description=task.description,
-                deadline=task.deadline,
-                status=task.status,
-                team_id=task.team_id,
-                assignee_ids=assignee_ids
-            )
-        )
-
-    return tasks_with_assignees
+        # Собираем ID исполнителей
+        assignee_ids = [a.user_id for a in task.assignees]
+        
+        task_list.append({
+            "id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "deadline": task.deadline.isoformat() if task.deadline else None,
+            "status": task.status,
+            "team_id": task.team_id,
+            "assignee_ids": assignee_ids,  # 👈 Теперь здесь будут ID
+        })
+    
+    return task_list
 
 
 @router.get("/{team_id}/tasks/{task_id}")
@@ -99,28 +115,32 @@ async def create_task(
         creator_id=user.id,
     )
     db.add(task)
-    await db.flush()  # получаем task.id
+    await db.flush()
 
     # добавляем всех исполнителей
     for uid in data.assignee_ids:
         db.add(TaskAssignee(task_id=task.id, user_id=uid))
 
     await db.commit()
-    await db.refresh(task)
-
-    # получить список исполнителей
+    
+    # ВАЖНО: Делаем новый запрос с загрузкой отношений
     result = await db.execute(
-        select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
+        select(Task)
+        .options(selectinload(Task.assignees))  # явно загружаем исполнителей
+        .where(Task.id == task.id)
     )
-    assignee_ids = [r[0] for r in result.all()]
+    task_with_assignees = result.scalar_one()
+
+    # получаем список ID исполнителей
+    assignee_ids = [a.user_id for a in task_with_assignees.assignees]
 
     return TaskRead(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        deadline=task.deadline.isoformat() if task.deadline else None,
-        status=task.status,
-        team_id=task.team_id,
+        id=task_with_assignees.id,
+        title=task_with_assignees.title,
+        description=task_with_assignees.description,
+        deadline=task_with_assignees.deadline.isoformat() if task_with_assignees.deadline else None,
+        status=task_with_assignees.status.value if task_with_assignees.status else None,
+        team_id=task_with_assignees.team_id,
         assignee_ids=assignee_ids
     )
 

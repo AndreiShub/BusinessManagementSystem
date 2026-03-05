@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 from typing import Optional
 import uuid
 
@@ -82,12 +83,15 @@ async def get_events(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
 ):
-    # --- год и месяц ---
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=== ЗАПРОС СОБЫТИЙ ===")
     today = datetime.now(timezone.utc)
     year = year or today.year
     month = month or today.month
 
-    # корректные даты с таймзоной UTC
+    # Границы месяца в UTC
     start_date = datetime(year, month, 1, tzinfo=timezone.utc)
     if month == 12:
         end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
@@ -96,7 +100,7 @@ async def get_events(
 
     events: list[dict] = []
 
-    # ---------- TASKS ----------
+    # ---------- Задачи ----------
     task_query = (
         select(Task)
         .join(TaskAssignee, Task.id == TaskAssignee.task_id)
@@ -105,27 +109,26 @@ async def get_events(
             Task.deadline >= start_date,
             Task.deadline < end_date,
         )
-)
+    )
     tasks = (await db.execute(task_query)).scalars().all()
 
     for task in tasks:
-        # собираем всех исполнителей для задачи
         assignees_query = select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
-        assignee_rows = (await db.execute(assignees_query)).scalars().all()
+        assignee_ids = (await db.execute(assignees_query)).scalars().all()
 
         events.append({
             "id": str(task.id),
             "title": task.title,
             "description": task.description or "",
             "event_type": "task",
-            "date": task.deadline.date().isoformat(),
-            "time": task.deadline.strftime("%H:%M") if task.deadline.time() else None,
+            "date": task.deadline.astimezone(timezone.utc).date().isoformat(),
+            "time": task.deadline.astimezone(timezone.utc).strftime("%H:%M"),
             "status": task.status.value if task.status else None,
-            "team_id": str(task.team_id),
-            "assignee_ids": [str(uid) for uid in assignee_rows],
+            "team_id": str(task.team_id) if task.team_id else None,
+            "assignee_ids": [str(uid) for uid in assignee_ids],
         })
 
-    # ---------- MEETINGS ----------
+    # ---------- Встречи ----------
     meeting_query = (
         select(Meeting)
         .join(MeetingParticipant)
@@ -136,8 +139,8 @@ async def get_events(
         )
     )
     meetings = (await db.execute(meeting_query)).scalars().all()
-
     now = datetime.now(timezone.utc)
+
     for meeting in meetings:
         if meeting.is_cancelled:
             status = "cancelled"
@@ -153,19 +156,20 @@ async def get_events(
             "title": meeting.title,
             "description": "Встреча",
             "event_type": "meeting",
-            "date": meeting.start_time.date().isoformat(),
-            "time": meeting.start_time.strftime("%H:%M"),
+            "date": meeting.start_time.astimezone(timezone.utc).date().isoformat(),
+            "time": meeting.start_time.astimezone(timezone.utc).strftime("%H:%M"),
             "status": status,
-            "team_id": str(meeting.team_id),
-            "participants": participants,
+            "team_id": str(meeting.team_id) if meeting.team_id else None,
+            "assignee_ids": participants,
         })
 
-    # сортировка по дате и времени
+    # Сортировка по дате и времени
     events.sort(key=lambda e: (e["date"], e["time"] or ""))
 
-    print("EVENTS:", events)
-    print("START:", start_date, start_date.tzinfo)
-    print("TASK DEADLINES:", [t.deadline for t in tasks])
+    logger.info(f"Всего событий в месяце: {len(events)}")
+    if events:
+        logger.info(f"Пример события: {events[0]}")
+
     return events
 
 
