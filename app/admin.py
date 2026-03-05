@@ -69,12 +69,12 @@ def setup_admin(app: FastAPI):
         ]
 
         column_labels = {
-            User.nickname: "Nickname",
-            User.email: "Email",
-            User.is_active: "Active",
-            User.is_superuser: "Superuser",
-            User.is_manager: "Manager",
-            User.id: "UUID",
+        "nickname": "Nickname",
+        "email": "Email",
+        "is_active": "Active",
+        "is_superuser": "Superuser",
+        "is_manager": "Manager",
+        "id": "UUID",
         }
 
         column_default_sort = [(User.nickname, True)]
@@ -93,12 +93,6 @@ def setup_admin(app: FastAPI):
         column_searchable_list = [
             User.nickname,
             User.email,
-        ]
-
-        column_filters = [
-            User.is_active,
-            User.is_superuser,
-            User.is_manager,
         ]
 
         name = "User"
