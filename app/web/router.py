@@ -66,3 +66,7 @@ async def join_page(request: Request):
 @router.get("/profile")
 async def profile_page(request: Request):
     return templates.TemplateResponse("profile.html", {"request": request})
+
+@router.get("/meetings")
+async def meetings_page(request: Request):
+    return templates.TemplateResponse("meetings.html", {"request": request})

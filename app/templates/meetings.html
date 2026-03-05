@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Встречи</h2>
+
+<!-- Выбор команды -->
+<label for="team-select">Выберите команду:</label>
+<select id="team-select">
+  <option value="">Выберите команду</option>
+</select>
+
+<hr>
+
+<!-- Форма создания встречи -->
+<div id="create-meeting-form" style="display:none;">
+  <h3>Создать встречу</h3>
+  <input type="text" id="meeting-title" placeholder="Название встречи"><br>
+  <input type="datetime-local" id="start-time"> -
+  <input type="datetime-local" id="end-time"><br>
+
+  <!-- Выбор участников -->
+  <select id="assignee-select">
+    <option value="">Добавить участника</option>
+  </select>
+  <div id="assignee-chips"></div>
+
+  <button id="submit-meeting">Создать</button>
+  <p id="form-error" style="color:red;"></p>
+</div>
+
+<hr>
+
+<!-- Список встреч -->
+<ul id="meetings-list"></ul>
+
+<script>
+// ==============================
+// utils
+// ==============================
+function getAuthHeaders() {
+  return {
+    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+    "Content-Type": "application/json"
+  };
+}
+
+// ==============================
+// state
+// ==============================
+let selectedAssignees = [];
+let currentTeamId = null;
+
+// ==============================
+// load teams
+// ==============================
+async function loadTeams() {
+  const res = await fetch("/api/v1/teams", { headers: getAuthHeaders() });
+  if (!res.ok) return;
+  const teams = await res.json();
+
+  const select = document.getElementById("team-select");
+  teams.forEach(team => {
+    const opt = document.createElement("option");
+    opt.value = team.id; // uuid команды
+    opt.textContent = team.name;
+    select.appendChild(opt);
+  });
+}
+
+document.getElementById("team-select").addEventListener("change", async (e) => {
+  currentTeamId = e.target.value;
+  if (!currentTeamId) return;
+
+  document.getElementById("create-meeting-form").style.display = "block";
+  await loadTeamMembers(currentTeamId);
+  await loadMeetings(currentTeamId);
+});
+
+// ==============================
+// load team members
+// ==============================
+async function loadTeamMembers(teamId) {
+  const res = await fetch(`/api/v1/teams/${teamId}/members`, { headers: getAuthHeaders() });
+  if (!res.ok) return;
+
+  const members = await res.json();
+  const assigneeSelect = document.getElementById("assignee-select");
+  assigneeSelect.innerHTML = `<option value="">Добавить участника</option>`;
+
+  members.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.user.id;
+    opt.textContent = m.user.nickname || m.user.email;
+    assigneeSelect.appendChild(opt);
+  });
+}
+
+// ==============================
+// handle assignees
+// ==============================
+const assigneeSelect = document.getElementById("assignee-select");
+const chipsContainer = document.getElementById("assignee-chips");
+
+assigneeSelect.addEventListener("change", () => {
+  const id = assigneeSelect.value;
+  const label = assigneeSelect.selectedOptions[0]?.textContent;
+  if (!id || !label) return;
+
+  if (selectedAssignees.find(a => a.id === id)) {
+    assigneeSelect.value = "";
+    return;
+  }
+
+  selectedAssignees.push({ id, label });
+  assigneeSelect.value = "";
+  renderChips();
+});
+
+function renderChips() {
+  chipsContainer.innerHTML = "";
+  selectedAssignees.forEach(a => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.innerHTML = `
+      ${a.label} <button type="button">×</button>
+    `;
+    chip.querySelector("button").onclick = () => {
+      selectedAssignees = selectedAssignees.filter(sa => sa.id !== a.id);
+      renderChips();
+    };
+    chipsContainer.appendChild(chip);
+  });
+}
+
+// ==============================
+// create meeting
+// ==============================
+document.getElementById("submit-meeting").onclick = async () => {
+  if (!currentTeamId) return alert("Выберите команду");
+
+  const title = document.getElementById("meeting-title").value;
+  const start_time = new Date(document.getElementById("start-time").value).toISOString();
+  const end_time = new Date(document.getElementById("end-time").value).toISOString();
+  const participant_ids = selectedAssignees.map(a => a.id).map(id => {
+    try {
+        return id; // строка UUID допустима
+    } catch (err) {
+        console.error("Неверный UUID:", id);
+        return null;
+    }
+}).filter(Boolean);
+
+  const res = await fetch(`api/v1/teams/${currentTeamId}/meetings`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ title, start_time, end_time, participant_ids })
+  });
+
+  if (res.ok) {
+    alert("Встреча создана!");
+    selectedAssignees = [];
+    renderChips();
+    document.getElementById("meeting-title").value = "";
+    document.getElementById("start-time").value = "";
+    document.getElementById("end-time").value = "";
+    loadMeetings(currentTeamId);
+  } else {
+    const err = await res.json();
+    document.getElementById("form-error").innerText = err.detail || "Ошибка";
+  }
+};
+
+// ==============================
+// load meetings
+// ==============================
+async function loadMeetings(teamId) {
+  const list = document.getElementById("meetings-list");
+  list.innerHTML = "";
+  const res = await fetch(`api/v1/teams/${teamId}/meetings`, { headers: getAuthHeaders() });
+  if (!res.ok) return;
+
+  const meetings = await res.json();
+  meetings.forEach(m => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${m.title}</strong> 
+      (${new Date(m.start_time).toLocaleString()} - ${new Date(m.end_time).toLocaleString()})
+      <button onclick="cancelMeeting('${m.id}')">Отменить</button>
+    `;
+    list.appendChild(li);
+  });
+}
+
+// ==============================
+// cancel meeting
+// ==============================
+async function cancelMeeting(meetingId) {
+  if (!currentTeamId) return;
+  const res = await fetch(`api/v1/teams/${currentTeamId}/meetings/${meetingId}/cancel`, {
+    method: "PATCH",
+    headers: getAuthHeaders()
+  });
+  if (res.ok) loadMeetings(currentTeamId);
+  else alert("Не удалось отменить встречу");
+}
+
+// ==============================
+// init
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  loadTeams();
+});
+</script>
+
+{% endblock %}

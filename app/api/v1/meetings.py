@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +19,7 @@ router = APIRouter(prefix="/teams", tags=["Meetings"])
 
 @router.post("/{team_id}/meetings", response_model=MeetingOut)
 async def create_meeting(
-    team_id: int,
+    team_id: uuid.UUID,
     data: MeetingCreate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
@@ -72,12 +74,24 @@ async def create_meeting(
         )
 
     await session.commit()
+
+    stmt = (
+        select(Meeting)
+        .options(
+            selectinload(Meeting.participants)
+            .selectinload(MeetingParticipant.user)
+        )
+        .where(Meeting.id == meeting.id)
+    )
+
+    meeting = await session.scalar(stmt)
+
     return meeting
 
 
 @router.get("/{team_id}/meetings", response_model=list[MeetingOut])
 async def team_meetings(
-    team_id: int,
+    team_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
 ):
@@ -103,7 +117,7 @@ async def team_meetings(
 
 @router.patch("/{team_id}/meetings/{meeting_id}/cancel")
 async def cancel_team_meeting(
-    team_id: int,
+    team_id: uuid.UUID,
     meeting_id: int,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
@@ -126,7 +140,7 @@ async def cancel_team_meeting(
     response_model=MeetingOut,
 )
 async def get_team_meeting(
-    team_id: int,
+    team_id: uuid.UUID,
     meeting_id: int,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),

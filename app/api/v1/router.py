@@ -5,6 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from app.core.auth import fastapi_users, auth_backend
 from app.db.models.meeting import Meeting, MeetingParticipant
 from app.db.models.task import Task, TaskAssignee
@@ -131,13 +132,14 @@ async def get_events(
     # ---------- Встречи ----------
     meeting_query = (
         select(Meeting)
+        .options(selectinload(Meeting.participants))
         .join(MeetingParticipant)
         .where(
             MeetingParticipant.user_id == current_user.id,
             Meeting.start_time >= start_date,
             Meeting.start_time < end_date,
         )
-    )
+)
     meetings = (await db.execute(meeting_query)).scalars().all()
     now = datetime.now(timezone.utc)
 

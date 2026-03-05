@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MeetingCreate(BaseModel):
@@ -9,15 +9,17 @@ class MeetingCreate(BaseModel):
     end_time: datetime
     participant_ids: list[uuid.UUID]
 
-
-class MeetingParticipantOut(BaseModel):
+class ParticipantOut(BaseModel):
     id: uuid.UUID
     email: str
     nickname: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
+class MeetingParticipantOut(BaseModel):
+    user: ParticipantOut
+
+    model_config = ConfigDict(from_attributes=True)
 
 class MeetingOut(BaseModel):
     id: int
