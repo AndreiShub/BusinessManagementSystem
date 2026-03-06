@@ -4,7 +4,7 @@ from typing import Optional
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.core.auth import fastapi_users, auth_backend
 from app.db.models.meeting import Meeting, MeetingParticipant
@@ -19,7 +19,6 @@ from app.api.v1.tasks import router as tasks_router
 from app.api.v1.meetings import router as meetings_router
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import current_active_user
-from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/v1")
 
@@ -86,7 +85,7 @@ async def get_events(
 ):
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
-    
+
     logger.info("=== ЗАПРОС СОБЫТИЙ ===")
     today = datetime.now(timezone.utc)
     year = year or today.year
@@ -114,20 +113,24 @@ async def get_events(
     tasks = (await db.execute(task_query)).scalars().all()
 
     for task in tasks:
-        assignees_query = select(TaskAssignee.user_id).where(TaskAssignee.task_id == task.id)
+        assignees_query = select(TaskAssignee.user_id).where(
+            TaskAssignee.task_id == task.id
+        )
         assignee_ids = (await db.execute(assignees_query)).scalars().all()
 
-        events.append({
-            "id": str(task.id),
-            "title": task.title,
-            "description": task.description or "",
-            "event_type": "task",
-            "date": task.deadline.astimezone(timezone.utc).date().isoformat(),
-            "time": task.deadline.astimezone(timezone.utc).strftime("%H:%M"),
-            "status": task.status.value if task.status else None,
-            "team_id": str(task.team_id) if task.team_id else None,
-            "assignee_ids": [str(uid) for uid in assignee_ids],
-        })
+        events.append(
+            {
+                "id": str(task.id),
+                "title": task.title,
+                "description": task.description or "",
+                "event_type": "task",
+                "date": task.deadline.astimezone(timezone.utc).date().isoformat(),
+                "time": task.deadline.astimezone(timezone.utc).strftime("%H:%M"),
+                "status": task.status.value if task.status else None,
+                "team_id": str(task.team_id) if task.team_id else None,
+                "assignee_ids": [str(uid) for uid in assignee_ids],
+            }
+        )
 
     # ---------- Встречи ----------
     meeting_query = (
@@ -139,7 +142,7 @@ async def get_events(
             Meeting.start_time >= start_date,
             Meeting.start_time < end_date,
         )
-)
+    )
     meetings = (await db.execute(meeting_query)).scalars().all()
     now = datetime.now(timezone.utc)
 
@@ -153,17 +156,19 @@ async def get_events(
 
         participants = [str(p.user_id) for p in meeting.participants]
 
-        events.append({
-            "id": f"meeting:{meeting.id}",
-            "title": meeting.title,
-            "description": "Встреча",
-            "event_type": "meeting",
-            "date": meeting.start_time.astimezone(timezone.utc).date().isoformat(),
-            "time": meeting.start_time.astimezone(timezone.utc).strftime("%H:%M"),
-            "status": status,
-            "team_id": str(meeting.team_id) if meeting.team_id else None,
-            "assignee_ids": participants,
-        })
+        events.append(
+            {
+                "id": f"meeting:{meeting.id}",
+                "title": meeting.title,
+                "description": "Встреча",
+                "event_type": "meeting",
+                "date": meeting.start_time.astimezone(timezone.utc).date().isoformat(),
+                "time": meeting.start_time.astimezone(timezone.utc).strftime("%H:%M"),
+                "status": status,
+                "team_id": str(meeting.team_id) if meeting.team_id else None,
+                "assignee_ids": participants,
+            }
+        )
 
     # Сортировка по дате и времени
     events.sort(key=lambda e: (e["date"], e["time"] or ""))
@@ -173,7 +178,6 @@ async def get_events(
         logger.info(f"Пример события: {events[0]}")
 
     return events
-
 
 
 # Эндпоинт для получения деталей конкретного события

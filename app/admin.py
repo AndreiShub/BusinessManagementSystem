@@ -69,12 +69,12 @@ def setup_admin(app: FastAPI):
         ]
 
         column_labels = {
-        "nickname": "Nickname",
-        "email": "Email",
-        "is_active": "Active",
-        "is_superuser": "Superuser",
-        "is_manager": "Manager",
-        "id": "UUID",
+            "nickname": "Nickname",
+            "email": "Email",
+            "is_active": "Active",
+            "is_superuser": "Superuser",
+            "is_manager": "Manager",
+            "id": "UUID",
         }
 
         column_default_sort = [(User.nickname, True)]

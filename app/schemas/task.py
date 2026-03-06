@@ -2,9 +2,6 @@ from typing import Annotated, List, Optional
 import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.orm import Mapped, mapped_column
 from app.db.models.task import TaskStatus
 
 
@@ -13,9 +10,7 @@ class TaskCreate(BaseModel):
     description: str | None = None
     deadline: datetime | None
     assignee_ids: list[uuid.UUID] = []
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class TaskUpdate(BaseModel):
@@ -24,9 +19,7 @@ class TaskUpdate(BaseModel):
     deadline: datetime | None
     status: TaskStatus | None = None
     assignee_id: uuid.UUID | None = None
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class TaskRead(BaseModel):

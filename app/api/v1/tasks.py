@@ -29,18 +29,17 @@ router = APIRouter(prefix="/teams", tags=["tasks"])
 async def get_team_tasks(
     team_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(current_active_user)
+    current_user: User = Depends(current_active_user),
 ):
     # Проверяем, что пользователь в команде
     member = await db.execute(
         select(TeamMember).where(
-            TeamMember.team_id == team_id,
-            TeamMember.user_id == current_user.id
+            TeamMember.team_id == team_id, TeamMember.user_id == current_user.id
         )
     )
     if not member.scalar_one_or_none():
         raise HTTPException(403, "Not a team member")
-    
+
     # Получаем задачи команды с загрузкой исполнителей
     result = await db.execute(
         select(Task)
@@ -48,23 +47,25 @@ async def get_team_tasks(
         .options(selectinload(Task.assignees))  # 👈 ВАЖНО: загружаем исполнителей
     )
     tasks = result.scalars().all()
-    
+
     # Формируем ответ с исполнителями
     task_list = []
     for task in tasks:
         # Собираем ID исполнителей
         assignee_ids = [a.user_id for a in task.assignees]
-        
-        task_list.append({
-            "id": task.id,
-            "title": task.title,
-            "description": task.description,
-            "deadline": task.deadline.isoformat() if task.deadline else None,
-            "status": task.status,
-            "team_id": task.team_id,
-            "assignee_ids": assignee_ids,  # 👈 Теперь здесь будут ID
-        })
-    
+
+        task_list.append(
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "deadline": task.deadline.isoformat() if task.deadline else None,
+                "status": task.status,
+                "team_id": task.team_id,
+                "assignee_ids": assignee_ids,  # 👈 Теперь здесь будут ID
+            }
+        )
+
     return task_list
 
 
@@ -99,8 +100,7 @@ async def create_task(
     for uid in data.assignee_ids:
         result = await db.execute(
             select(TeamMember).where(
-                TeamMember.team_id == team_id,
-                TeamMember.user_id == uid
+                TeamMember.team_id == team_id, TeamMember.user_id == uid
             )
         )
         if not result.scalar_one_or_none():
@@ -122,7 +122,7 @@ async def create_task(
         db.add(TaskAssignee(task_id=task.id, user_id=uid))
 
     await db.commit()
-    
+
     # ВАЖНО: Делаем новый запрос с загрузкой отношений
     result = await db.execute(
         select(Task)
@@ -138,11 +138,16 @@ async def create_task(
         id=task_with_assignees.id,
         title=task_with_assignees.title,
         description=task_with_assignees.description,
-        deadline=task_with_assignees.deadline.isoformat() if task_with_assignees.deadline else None,
+        deadline=(
+            task_with_assignees.deadline.isoformat()
+            if task_with_assignees.deadline
+            else None
+        ),
         status=task_with_assignees.status.value if task_with_assignees.status else None,
         team_id=task_with_assignees.team_id,
-        assignee_ids=assignee_ids
+        assignee_ids=assignee_ids,
     )
+
 
 @router.patch("/{team_id}/tasks/{task_id}", response_model=TaskRead)
 async def update_task(

@@ -9,6 +9,7 @@ class MeetingCreate(BaseModel):
     end_time: datetime
     participant_ids: list[uuid.UUID]
 
+
 class ParticipantOut(BaseModel):
     id: uuid.UUID
     email: str
@@ -16,10 +17,12 @@ class ParticipantOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MeetingParticipantOut(BaseModel):
     user: ParticipantOut
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class MeetingOut(BaseModel):
     id: int

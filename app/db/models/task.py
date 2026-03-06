@@ -35,7 +35,9 @@ class Task(Base):
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
-    deadline: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    deadline: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
     status: Mapped[TaskStatus] = mapped_column(
         Enum(TaskStatus),
         default=TaskStatus.open,
@@ -63,6 +65,7 @@ class Task(Base):
     comments = relationship("TaskComment", backref="task", cascade="all, delete")
     ratings = relationship("TaskRating", backref="task", cascade="all, delete")
 
+
 class TaskAssignee(Base):
     __tablename__ = "task_assignees"
 
@@ -77,6 +80,7 @@ class TaskAssignee(Base):
     )
 
     user = relationship("User")
+
 
 class TaskRating(Base):
     __tablename__ = "task_ratings"

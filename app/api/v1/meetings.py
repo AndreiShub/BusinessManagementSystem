@@ -78,8 +78,7 @@ async def create_meeting(
     stmt = (
         select(Meeting)
         .options(
-            selectinload(Meeting.participants)
-            .selectinload(MeetingParticipant.user)
+            selectinload(Meeting.participants).selectinload(MeetingParticipant.user)
         )
         .where(Meeting.id == meeting.id)
     )

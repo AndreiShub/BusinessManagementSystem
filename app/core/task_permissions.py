@@ -8,24 +8,26 @@ from app.db.models.team_member import TeamMember, TeamRole
 from app.db.models.task import Task
 
 
-async def ensure_can_manage_tasks(db: AsyncSession, user_id: uuid.UUID, team_id: uuid.UUID):
+async def ensure_can_manage_tasks(
+    db: AsyncSession, user_id: uuid.UUID, team_id: uuid.UUID
+):
     # Проверяем, является ли пользователь участником команды и имеет ли права
     result = await db.execute(
         select(TeamMember).where(
-            TeamMember.team_id == team_id,
-            TeamMember.user_id == user_id
+            TeamMember.team_id == team_id, TeamMember.user_id == user_id
         )
     )
     member = result.scalar_one_or_none()
-    
+
     if not member:
         raise HTTPException(403, "Not allowed to manage tasks")
-    
+
     # Проверяем роль (если нужно)
     # if member.role not in ['admin', 'manager']:
     #     raise HTTPException(403, "Insufficient permissions")
-    
+
     return member
+
 
 async def ensure_can_update_task(
     db: AsyncSession,

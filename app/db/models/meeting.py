@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
+
 class Meeting(Base):
     __tablename__ = "meetings"
 
