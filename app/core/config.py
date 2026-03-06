@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    POSTGRES_TEST_DB: str
     DB_HOST_LOCAL: str
     DB_HOST_DOCKER: str
     DB_PORT: int = 5432
@@ -21,6 +22,14 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/"
             f"{self.POSTGRES_DB}"
+        )
+    
+    @property
+    def TEST_DATABASE_URL(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/"
+            f"{self.POSTGRES_TEST_DB}"
         )
 
     class Config:
