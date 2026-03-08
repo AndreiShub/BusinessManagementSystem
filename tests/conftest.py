@@ -13,9 +13,7 @@ from app.db.session import get_db
 TEST_DATABASE_URL = settings.TEST_DATABASE_URL
 
 # Создаем engine с NullPool для избежания конфликтов
-engine = create_async_engine(
-    TEST_DATABASE_URL, echo=True, poolclass=NullPool
-)
+engine = create_async_engine(TEST_DATABASE_URL, echo=True, poolclass=NullPool)
 TestingSessionLocal = sessionmaker(
     engine,
     class_=AsyncSession,

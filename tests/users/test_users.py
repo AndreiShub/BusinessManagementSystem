@@ -2,6 +2,7 @@ import pytest
 
 from tests.factories.user_factory import create_user
 
+
 @pytest.mark.asyncio
 async def test_get_user(client, db_session):
     user = await create_user(
@@ -23,6 +24,7 @@ async def test_get_user(client, db_session):
 
     assert response.status_code == 200
     assert response.json()["email"] == user.email
+
 
 @pytest.mark.asyncio
 async def test_update_user(client, db_session):
@@ -47,6 +49,7 @@ async def test_update_user(client, db_session):
     assert response.status_code == 200
     assert response.json()["nickname"] == "newnickname"
 
+
 @pytest.mark.asyncio
 async def test_delete_user(client, db_session):
     user = await create_user(
@@ -67,6 +70,7 @@ async def test_delete_user(client, db_session):
     )
 
     assert response.status_code == 204
+
 
 @pytest.mark.asyncio
 async def test_get_user_unauthorized(client, db_session):
