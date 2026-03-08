@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from tests.factories.user_factory import create_user
@@ -40,14 +42,15 @@ async def test_update_user(client, db_session):
 
     token = login.json()["access_token"]
 
+    nickname = f"newnickname_{uuid.uuid4().hex[:8]}"
     response = await client.patch(
         f"/api/v1/users/{user.id}",
-        json={"nickname": "newnickname"},
+        json={"nickname": nickname},
         headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == 200
-    assert response.json()["nickname"] == "newnickname"
+    assert response.json()["nickname"] == nickname
 
 
 @pytest.mark.asyncio
