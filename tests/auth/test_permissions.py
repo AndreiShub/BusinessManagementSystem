@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_me_unauthorized(client):
     """Test /me without authentication."""

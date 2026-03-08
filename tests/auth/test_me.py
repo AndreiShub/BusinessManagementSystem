@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_me(client, auth_headers, registered_user):
     """Test /me endpoint."""

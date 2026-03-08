@@ -23,7 +23,7 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/"
             f"{self.POSTGRES_DB}"
         )
-    
+
     @property
     def TEST_DATABASE_URL(self) -> str:
         return (

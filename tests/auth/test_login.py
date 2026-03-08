@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_login(client, registered_user):
     """Test login endpoint."""
@@ -7,8 +8,8 @@ async def test_login(client, registered_user):
         "/api/v1/auth/login",
         data={
             "username": registered_user["email"],
-            "password": registered_user["password"]
-        }
+            "password": registered_user["password"],
+        },
     )
     assert response.status_code == 200
     data = response.json()

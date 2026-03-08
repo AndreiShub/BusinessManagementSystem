@@ -1,11 +1,15 @@
 import uuid
 from app.db.models.user import User
 from app.core.security import get_password_hash
+
 MAX_BCRYPT_BYTES = 72
+
 
 async def create_user(db_session, **kwargs):
     raw_password = kwargs.get("password", "password")
-    truncated_password = raw_password.encode("utf-8")[:MAX_BCRYPT_BYTES].decode("utf-8", errors="ignore")
+    truncated_password = raw_password.encode("utf-8")[:MAX_BCRYPT_BYTES].decode(
+        "utf-8", errors="ignore"
+    )
 
     user = User(
         id=uuid.uuid4(),
