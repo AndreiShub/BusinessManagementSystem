@@ -5,7 +5,7 @@ from fastapi_users import schemas
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     nickname: str | None = None
-    is_manager: bool
+    is_manager: bool = False
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -14,5 +14,5 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    email: Optional[str]
-    nickname: Optional[str]
+    email: Optional[str] = None
+    nickname: Optional[str] = None
