@@ -39,24 +39,6 @@ Other Tools:
 -Docker (optional)
 -Git and GitHub
 
-Project Structure
-BusinessManagementSystem
-│
-├── app
-│   ├── api
-│   ├── core
-│   ├── db
-│   ├── models
-│   ├── schemas
-│   └── services
-│
-├── tests
-│
-├── alembic
-│
-├── requirements.txt
-└── README.md
-
 Main directories:
 
 app/ – application source code
