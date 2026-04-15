@@ -1,6 +1,7 @@
 import uuid
 from app.db.models import Team, TeamMember
 
+
 async def create_team(db_session, creator, **kwargs):
     team = Team(
         id=uuid.uuid4(),

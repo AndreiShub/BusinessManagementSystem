@@ -1,14 +1,11 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
-from app.db.models.user import User
 from app.db.session import get_db
-from app.db.models.team import Team
-from app.db.models.team_member import TeamMember, TeamRole
 from app.core.auth import current_active_user
+from app.dependencies.services import get_team_member_service
 from app.schemas.team import JoinTeamRequest
+from app.services.team_member import TeamMemberService
 
 router = APIRouter(prefix="/teams", tags=["team-members"])
 
@@ -18,63 +15,16 @@ async def join_team(
     data: JoinTeamRequest,
     user=Depends(current_active_user),
     db: AsyncSession = Depends(get_db),
+    service: TeamMemberService = Depends(get_team_member_service),
 ):
-    # 1. Ищем команду по коду
-    result = await db.execute(select(Team).where(Team.code == data.code))
-    team = result.scalar_one_or_none()
-
-    if not team:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Team not found",
-        )
-
-    # 2. Проверяем, что пользователь не состоит в команде
-    result = await db.execute(
-        select(TeamMember).where(
-            TeamMember.team_id == team.id,
-            TeamMember.user_id == user.id,
-        )
-    )
-    if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You are already a member of this team",
-        )
-
-    # 3. Добавляем пользователя
-    member = TeamMember(
-        user_id=user.id,
-        team_id=team.id,
-        role=TeamRole.user,
-    )
-    db.add(member)
-    await db.commit()
-
-    return {"message": "Joined the team successfully"}
+    return await service.join_team(db, data.code, user)
 
 
 @router.get("/{team_id}/members")
 async def get_team_members(
-    team_id: UUID, db: AsyncSession = Depends(get_db), user=Depends(current_active_user)
+    team_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(current_active_user),
+    service: TeamMemberService = Depends(get_team_member_service),
 ):
-    result = await db.execute(
-        select(TeamMember, User)
-        .join(User, User.id == TeamMember.user_id)
-        .where(TeamMember.team_id == team_id)
-    )
-
-    members = []
-    for tm, user in result.all():
-        members.append(
-            {
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "nickname": user.nickname or user.email,
-                },
-                "role": tm.role,
-            }
-        )
-
-    return members
+    return await service.get_team_members(db, team_id)

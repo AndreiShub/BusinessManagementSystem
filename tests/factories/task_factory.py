@@ -1,8 +1,7 @@
 import uuid
 
 from app.db.models import Task
-from app.db.models.task import TaskAssignee, TaskStatus
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.models.task import TaskStatus
 
 
 async def create_task(db_session, team_id, creator_id, **kwargs):
