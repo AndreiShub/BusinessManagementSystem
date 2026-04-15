@@ -1,103 +1,92 @@
-Business Management System
+Система управления бизнесом
 
-Business Management System is a backend application designed to help manage business operations such as tasks, teams, and user interactions.
-The project exposes a REST API that allows users to create, update, and manage business entities in a structured way.
+Система управления бизнесом — это backend-приложение, предназначенное для управления бизнес-операциями, такими как задачи, команды и взаимодействие пользователей.
+Проект предоставляет REST API, который позволяет создавать, обновлять и управлять бизнес-сущностями в структурированном виде.
 
-The system is built using Python and the modern web framework FastAPI, which provides high-performance APIs with automatic documentation and strong typing support.
+Система построена на Python и веб-фреймворке FastAPI, который обеспечивает высокопроизводительные API с автоматической документацией и поддержкой строгой типизации.
 
-This project demonstrates backend development practices including API design, authentication, database management, and automated testing.
+Этот проект демонстрирует практики backend-разработки, включая проектирование API, аутентификацию, работу с базой данных и автоматизированное тестирование.
 
-Features
+Возможности
+Аутентификация и авторизация пользователей
+Управление задачами (создание, обновление, удаление, просмотр списка)
+Назначение пользователей и команд на задачи
+RESTful API эндпоинты
+Миграции базы данных
+Автоматизированные тесты с использованием pytest
+Модульная и масштабируемая структура проекта
 
-- User authentication and authorization
-- Task management (create, update, delete, list)
-- Team and user assignment to tasks
-
-- RESTful API endpoints
-- Database migrations
-- Automated tests using pytest
-- Modular and scalable project structure
-
-Tech Stack
-
+Технологический стек
 Backend:
-- Python
-- FastAPI
-- SQLAlchemy
--Alembic
+Python
+FastAPI
+SQLAlchemy
+Alembic
+База данных:
+PostgreSQL
+Аутентификация:
+JWT-аутентификация
+Тестирование:
+pytest
+Дополнительные инструменты:
+Docker (опционально)
+Git и GitHub
+Основные директории
+app/ – исходный код приложения
+api/ – API эндпоинты
+models/ – модели базы данных
+schemas/ – Pydantic схемы
+services/ – бизнес-логика
+tests/ – автоматизированные тесты
 
-Database:
-- PostgreSQL
-
-Authentication:
--JWT authentication
-
-Testing:
-- pytest
-  
-Other Tools:
--Docker (optional)
--Git and GitHub
-
-Main directories:
-
-app/ – application source code
-api/ – API endpoints
-models/ – database models
-schemas/ – Pydantic schemas
-services/ – business logic
-tests/ – automated tests
-
-Installation:
-Clone the repository:
+Установка
+Клонирование репозитория:
 git clone https://github.com/AndreiShub/BusinessManagementSystem.git
 cd BusinessManagementSystem
-
-Create a virtual environment:
+Создание виртуального окружения:
 python -m venv venv
 source venv/bin/activate
-
-Install dependencies:
+Установка зависимостей:
 pip install -r requirements.txt
+Переменные окружения
 
-Environment Variables
-Create a .env file and configure the following variables:
+Создайте файл .env и укажите следующие переменные:
+
 DATABASE_URL=postgresql+asyncpg://user:password@localhost/dbname
 SECRET_KEY=your_secret_key
+Миграции базы данных
 
-Database Migration
+Запуск миграций с помощью Alembic:
 
-Run migrations using Alembic:
 alembic upgrade head
-Running the Application
 
-Start the development server:
+Запуск приложения
+Запуск сервера разработки:
+
 uvicorn app.main:app --reload
 
-API will be available at:
+API будет доступен по адресу:
+
 http://localhost:8000
 
-Interactive API documentation:
+Интерактивная документация API:
+
 http://localhost:8000/docs
-
-
-To run automated tests:
+Запуск тестов
 pytest
+Документация API
 
-API Documentation:
-FastAPI automatically generates interactive documentation.
+FastAPI автоматически генерирует интерактивную документацию.
 
-Available endpoints documentation:
-/docs or /redoc
+Доступные интерфейсы:
+/docs
+/redoc
 
-Future Improvements
-Role based access control
-Notifications system
-Advanced filtering and search
-Frontend dashboard
+Возможные улучшения
+Ролевая модель доступа (RBAC)
+Система уведомлений
+Расширенная фильтрация и поиск
+Фоновые задачи и планировщик
+Лицензия
 
-Background tasks and scheduling
-
-License
-
-This project is licensed under the MIT License.
+Проект распространяется под лицензией MIT.
