@@ -2,13 +2,16 @@ from datetime import datetime, timezone
 import uuid
 from fastapi import HTTPException
 from app.repositories.event import EventRepository
+from typing import List
+
+from app.schemas.event import EventBase, MeetingEventDetail, TaskEventDetail
 
 
 class EventService:
     def __init__(self, repo: EventRepository):
         self.repo = repo
 
-    async def get_events(self, session, user, year=None, month=None):
+    async def get_events(self, session, user, year=None, month=None) -> List[EventBase]:
         today = datetime.now(timezone.utc)
         year = year or today.year
         month = month or today.month
@@ -29,17 +32,17 @@ class EventService:
             assignees = await self.repo.get_task_assignees(session, task.id)
 
             events.append(
-                {
-                    "id": str(task.id),
-                    "title": task.title,
-                    "description": task.description or "",
-                    "event_type": "task",
-                    "date": task.deadline.date().isoformat(),
-                    "time": task.deadline.strftime("%H:%M"),
-                    "status": task.status.value if task.status else None,
-                    "team_id": str(task.team_id) if task.team_id else None,
-                    "assignee_ids": [str(uid) for uid in assignees],
-                }
+                EventBase(
+                    id=str(task.id),
+                    title=task.title,
+                    description=task.description or "",
+                    event_type="task",
+                    date=task.deadline.date().isoformat(),
+                    time=task.deadline.strftime("%H:%M"),
+                    status=task.status.value if task.status else None,
+                    team_id=str(task.team_id) if task.team_id else None,
+                    assignee_ids=[str(uid) for uid in assignees],
+                )
             )
 
         # ===== MEETINGS =====
@@ -58,20 +61,20 @@ class EventService:
                 status = "planned"
 
             events.append(
-                {
-                    "id": f"meeting:{meeting.id}",
-                    "title": meeting.title,
-                    "description": "Встреча",
-                    "event_type": "meeting",
-                    "date": meeting.start_time.date().isoformat(),
-                    "time": meeting.start_time.strftime("%H:%M"),
-                    "status": status,
-                    "team_id": str(meeting.team_id),
-                    "assignee_ids": [str(p.user_id) for p in meeting.participants],
-                }
+                EventBase(
+                    id=f"meeting:{meeting.id}",
+                    title=meeting.title,
+                    description="Встреча",
+                    event_type="meeting",
+                    date=meeting.start_time.date().isoformat(),
+                    time=meeting.start_time.strftime("%H:%M"),
+                    status=status,
+                    team_id=str(meeting.team_id),
+                    assignee_ids=[str(p.user_id) for p in meeting.participants],
+                )
             )
 
-        events.sort(key=lambda e: (e["date"], e["time"] or ""))
+        events.sort(key=lambda e: (e.date, e.time or ""))
 
         return events
 
@@ -94,17 +97,17 @@ class EventService:
             else:
                 status = "planned"
 
-            return {
-                "id": event_id,
-                "title": meeting.title,
-                "description": "Встреча",
-                "start_time": meeting.start_time.isoformat(),
-                "end_time": meeting.end_time.isoformat(),
-                "event_type": "meeting",
-                "status": status,
-                "team_id": str(meeting.team_id),
-                "participants": [str(p.user_id) for p in meeting.participants],
-            }
+            return MeetingEventDetail(
+                id=event_id,
+                title=meeting.title,
+                description="Встреча",
+                start_time=meeting.start_time.isoformat(),
+                end_time=meeting.end_time.isoformat(),
+                event_type="meeting",
+                status=status,
+                team_id=str(meeting.team_id),
+                participants=[str(p.user_id) for p in meeting.participants],
+            )
 
         # ===== TASK =====
         try:
@@ -117,12 +120,12 @@ class EventService:
         if not task:
             raise HTTPException(404, "Task not found")
 
-        return {
-            "id": str(task.id),
-            "title": task.title,
-            "description": task.description or "",
-            "deadline": task.deadline.isoformat() if task.deadline else None,
-            "status": task.status.value,
-            "event_type": "task",
-            "team_id": str(task.team_id),
-        }
+        return TaskEventDetail(
+            id=str(task.id),
+            title=task.title,
+            description=task.description or "",
+            deadline=task.deadline.isoformat() if task.deadline else None,
+            status=task.status.value,
+            event_type="task",
+            team_id=str(task.team_id),
+        )
